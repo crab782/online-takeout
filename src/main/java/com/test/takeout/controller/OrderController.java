@@ -1,0 +1,50 @@
+package com.test.takeout.controller;
+import org.springframework.web.bind.annotation.*;
+import javax.annotation.Resource;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/front/order")
+public class OrderController {
+
+    @Resource
+    private OrderService orderService;
+
+    @GetMapping("/list")
+    public ResponseVO<List<OrderVO>> getOrderList(@RequestHeader("Authorization") String token) {
+        return ResponseVO.success(orderService.getOrderList(token));
+    }
+
+    @GetMapping("/detail")
+    public ResponseVO<OrderVO> getOrderDetail(@RequestHeader("Authorization") String token,
+                                              @RequestParam Long orderId) {
+        return ResponseVO.success(orderService.getOrderDetail(token, orderId));
+    }
+
+    @PostMapping("/create")
+    public ResponseVO<OrderVO> createOrder(@RequestHeader("Authorization") String token,
+                                           @RequestBody OrderCreateDTO createDTO) {
+        return ResponseVO.success(orderService.createOrder(token, createDTO));
+    }
+
+    @PostMapping("/cancel")
+    public ResponseVO<Void> cancelOrder(@RequestHeader("Authorization") String token,
+                                        @RequestBody OrderCancelDTO cancelDTO) {
+        orderService.cancelOrder(token, cancelDTO);
+        return ResponseVO.success(null);
+    }
+
+    @PostMapping("/confirm-receipt")
+    public ResponseVO<Void> confirmReceipt(@RequestHeader("Authorization") String token,
+                                           @RequestBody OrderConfirmDTO confirmDTO) {
+        orderService.confirmReceipt(token, confirmDTO);
+        return ResponseVO.success(null);
+    }
+
+    @PostMapping("/again")
+    public ResponseVO<Void> orderAgain(@RequestHeader("Authorization") String token,
+                                       @RequestBody OrderAgainDTO againDTO) {
+        orderService.orderAgain(token, againDTO);
+        return ResponseVO.success(null);
+    }
+}

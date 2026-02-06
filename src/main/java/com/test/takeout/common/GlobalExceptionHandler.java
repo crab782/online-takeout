@@ -7,6 +7,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.SQLIntegrityConstraintViolationException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+
+
 
 
 /**
@@ -29,4 +35,24 @@ public class GlobalExceptionHandler {
         }
         return R.error("未知错误");
     }
+
+
+
+
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseVO<Void> handleBusinessException(BusinessException e) {
+        return ResponseVO.fail(e.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseVO<Void> handleException(Exception e) {
+        // 记录日志
+        return ResponseVO.fail("系统异常，请稍后重试");
+    }
+
+
+
+
+
 }
