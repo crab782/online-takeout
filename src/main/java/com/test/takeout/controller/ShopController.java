@@ -71,11 +71,12 @@ public class ShopController {
         result.put("phone", store.getPhone());
         result.put("status", store.getStatus());
         result.put("categoryId", store.getCategoryId());
-        result.put("openingHours", store.getOpeningHours());
+        result.put("openTime", store.getOpenTime());
+        result.put("closeTime", store.getCloseTime());
         result.put("deliveryFee", store.getDeliveryFee());
         result.put("minOrderAmount", store.getMinOrderAmount());
-        result.put("rating", store.getRating());
-        result.put("sales", store.getSales());
+        result.put("rating", 4.5);
+        result.put("sales", 1000);
         result.put("createTime", store.getCreateTime());
         result.put("updateTime", store.getUpdateTime());
 

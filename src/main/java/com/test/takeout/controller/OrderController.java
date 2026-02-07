@@ -401,7 +401,7 @@ public class OrderController {
         Orders orders = new Orders();
         orders.setUserId(userId);
         orders.setAmount(ordersSubmitDTO.getAmount());
-        orders.setReceiver(addressBook.getName());
+        orders.setReceiver(addressBook.getConsignee());
         orders.setAddress(addressBook.getDetail());
         orders.setPhone(addressBook.getPhone());
         orders.setStatus(0);

@@ -1227,7 +1227,7 @@ public class PlatformController {
      * @return 更新结果
      */
     @PutMapping("/orders/{orderId}/status")
-    public R<String> updateOrderStatus(@PathVariable Long orderId, @RequestBody Map<String, Integer> params) {
+    public R<Map<String, Object>> updateOrderStatus(@PathVariable Long orderId, @RequestBody Map<String, Integer> params) {
         log.info("更新订单状态，订单ID: {}, 状态: {}", orderId, params.get("status"));
         
         Integer status = params.get("status");
@@ -1247,8 +1247,9 @@ public class PlatformController {
         result.put("newStatus", statusNames[status]);
         result.put("status", status);
         result.put("updateTime", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        result.put("message", "订单状态更新成功");
         
-        return R.success("订单状态更新成功", result);
+        return R.success(result);
     }
 
     @GetMapping("/user/stats")
