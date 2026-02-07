@@ -1,47 +1,40 @@
 package com.test.takeout.entity;
-import javax.persistence.*;
+
+import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "finance_statistics")
+/**
+ * 财务统计实体类
+ */
+@TableName("finance_statistics")
 public class FinanceStatistics implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    @Column(name = "month", nullable = false, length = 7)
     private String month;
 
-    @Column(name = "total_revenue", precision = 12, scale = 2)
     private BigDecimal totalRevenue;
 
-    @Column(name = "shop_count")
     private Integer shopCount;
 
-    @Column(name = "average_revenue", precision = 12, scale = 2)
     private BigDecimal averageRevenue;
 
-    @Column(name = "total_withdrawal", precision = 12, scale = 2)
     private BigDecimal totalWithdrawal;
 
-    @Column(name = "withdrawal_count")
     private Integer withdrawalCount;
 
-    @Column(name = "platform_cash_flow", precision = 12, scale = 2)
     private BigDecimal platformCashFlow;
 
-    @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
 
     // Getter and Setter methods
     public Long getId() {
@@ -108,19 +101,19 @@ public class FinanceStatistics implements Serializable {
         this.platformCashFlow = platformCashFlow;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -132,7 +125,7 @@ public class FinanceStatistics implements Serializable {
         this.month = month;
         this.totalRevenue = totalRevenue;
         this.shopCount = shopCount;
-        this.createdAt = new Date();
-        this.updatedAt = new Date();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

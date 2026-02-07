@@ -1,43 +1,35 @@
 package com.test.takeout.entity;
-import javax.persistence.*;
+import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "withdrawal")
+/**
+ * 提现实体类
+ */
+@TableName("withdrawal")
 public class Withdrawal implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    @Column(name = "shop_id", nullable = false)
     private Long shopId;
 
-    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @Column(name = "status", nullable = false, length = 20)
     private String status;
 
-    @Column(name = "apply_time", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date applyTime;
+    private LocalDateTime applyTime;
 
-    @Column(name = "process_time")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date processTime;
+    private LocalDateTime processTime;
 
-    @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
 
     // Getter and Setter methods
     public Long getId() {
@@ -72,35 +64,35 @@ public class Withdrawal implements Serializable {
         this.status = status;
     }
 
-    public Date getApplyTime() {
+    public LocalDateTime getApplyTime() {
         return applyTime;
     }
 
-    public void setApplyTime(Date applyTime) {
+    public void setApplyTime(LocalDateTime applyTime) {
         this.applyTime = applyTime;
     }
 
-    public Date getProcessTime() {
+    public LocalDateTime getProcessTime() {
         return processTime;
     }
 
-    public void setProcessTime(Date processTime) {
+    public void setProcessTime(LocalDateTime processTime) {
         this.processTime = processTime;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -112,8 +104,8 @@ public class Withdrawal implements Serializable {
         this.shopId = shopId;
         this.amount = amount;
         this.status = status;
-        this.applyTime = new Date();
-        this.createdAt = new Date();
-        this.updatedAt = new Date();
+        this.applyTime = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

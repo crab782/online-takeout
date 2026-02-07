@@ -1,50 +1,41 @@
 package com.test.takeout.entity;
-import javax.persistence.*;
+import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "order_detail")
+/**
+ * 订单详情实体类
+ */
+@TableName("order_detail")
 public class OrderDetail  implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    @Column(name = "order_id", nullable = false)
     private Long orderId;
 
-    @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "description", length = 255)
     private String description;
 
-    @Column(name = "image", length = 255)
     private String image;
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(name = "number", nullable = false)
     private Integer number;
 
-    @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @TableField(exist = false)
     private Order order;
 
     // Getter and Setter methods
@@ -112,19 +103,19 @@ public class OrderDetail  implements Serializable {
         this.number = number;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -146,7 +137,7 @@ public class OrderDetail  implements Serializable {
         this.name = name;
         this.price = price;
         this.number = number;
-        this.createdAt = new Date();
-        this.updatedAt = new Date();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

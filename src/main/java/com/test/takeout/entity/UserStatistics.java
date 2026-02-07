@@ -1,46 +1,38 @@
 package com.test.takeout.entity;
-import javax.persistence.*;
+import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "user_statistics")
+/**
+ * 用户统计实体类
+ */
+@TableName("user_statistics")
 public class UserStatistics implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    @Column(name = "date", nullable = false, length = 10)
     private String date;
 
-    @Column(name = "total_users")
     private Integer totalUsers;
 
-    @Column(name = "login_users")
     private Integer loginUsers;
 
-    @Column(name = "new_users")
     private Integer newUsers;
 
-    @Column(name = "male_users")
     private Integer maleUsers;
 
-    @Column(name = "female_users")
     private Integer femaleUsers;
 
-    @Column(name = "avg_consumption", precision = 10, scale = 2)
     private Double avgConsumption;
 
-    @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
 
     // Getter and Setter methods
     public Long getId() {
@@ -107,19 +99,19 @@ public class UserStatistics implements Serializable {
         this.avgConsumption = avgConsumption;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -129,7 +121,7 @@ public class UserStatistics implements Serializable {
 
     public UserStatistics(String date) {
         this.date = date;
-        this.createdAt = new Date();
-        this.updatedAt = new Date();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

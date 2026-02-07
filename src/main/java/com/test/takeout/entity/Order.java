@@ -1,69 +1,52 @@
 package com.test.takeout.entity;
-import javax.persistence.*;
+import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
-@Entity
-@Table(name = "orders")
+/**
+ * 订单实体类
+ */
+@TableName("orders")
 public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    @Column(name = "order_number", nullable = false, length = 50, unique = true)
     private String orderNumber;
 
-    @Column(name = "shop_id", nullable = false)
     private Long shopId;
 
-    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "user_name", nullable = false, length = 50)
     private String userName;
 
-    @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
-    @Column(name = "address", nullable = false, length = 255)
     private String address;
 
-    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @Column(name = "status", nullable = false, length = 20)
     private String status;
 
-    @Column(name = "order_time", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date orderTime;
+    private LocalDateTime orderTime;
 
-    @Column(name = "pay_time")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date payTime;
+    private LocalDateTime payTime;
 
-    @Column(name = "complete_time")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date completeTime;
+    private LocalDateTime completeTime;
 
-    @Column(name = "cancel_time")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date cancelTime;
+    private LocalDateTime cancelTime;
 
-    @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @TableField(exist = false)
     private List<OrderDetail> orderDetails;
 
     // Getter and Setter methods
@@ -139,51 +122,51 @@ public class Order implements Serializable {
         this.status = status;
     }
 
-    public Date getOrderTime() {
+    public LocalDateTime getOrderTime() {
         return orderTime;
     }
 
-    public void setOrderTime(Date orderTime) {
+    public void setOrderTime(LocalDateTime orderTime) {
         this.orderTime = orderTime;
     }
 
-    public Date getPayTime() {
+    public LocalDateTime getPayTime() {
         return payTime;
     }
 
-    public void setPayTime(Date payTime) {
+    public void setPayTime(LocalDateTime payTime) {
         this.payTime = payTime;
     }
 
-    public Date getCompleteTime() {
+    public LocalDateTime getCompleteTime() {
         return completeTime;
     }
 
-    public void setCompleteTime(Date completeTime) {
+    public void setCompleteTime(LocalDateTime completeTime) {
         this.completeTime = completeTime;
     }
 
-    public Date getCancelTime() {
+    public LocalDateTime getCancelTime() {
         return cancelTime;
     }
 
-    public void setCancelTime(Date cancelTime) {
+    public void setCancelTime(LocalDateTime cancelTime) {
         this.cancelTime = cancelTime;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -208,8 +191,8 @@ public class Order implements Serializable {
         this.address = address;
         this.amount = amount;
         this.status = status;
-        this.orderTime = new Date();
-        this.createdAt = new Date();
-        this.updatedAt = new Date();
+        this.orderTime = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }
