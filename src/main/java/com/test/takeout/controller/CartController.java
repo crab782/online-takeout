@@ -1,7 +1,11 @@
 package com.test.takeout.controller;
 import org.springframework.web.bind.annotation.*;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
+import com.test.takeout.service.CartService;
+import com.test.takeout.vo.ResponseVO;
+import com.test.takeout.vo.CartVO;
+import com.test.takeout.dto.CartUpdateDTO;
 
 @RestController
 @RequestMapping("/api/front/cart")

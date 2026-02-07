@@ -5,6 +5,4 @@ import com.test.takeout.entity.Employee;
 
 public interface EmployeeService extends IService<Employee> {
 
-
-
 }

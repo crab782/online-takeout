@@ -1,6 +1,11 @@
 package com.test.takeout.controller;
 import org.springframework.web.bind.annotation.*;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
+import java.util.List;
+import com.test.takeout.service.CommentService;
+import com.test.takeout.vo.ResponseVO;
+import com.test.takeout.vo.CommentVO;
+import com.test.takeout.dto.CommentSubmitDTO;
 
 @RestController
 @RequestMapping("/api/front/comment")

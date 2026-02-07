@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
 
 @Slf4j
 @RestController
@@ -27,32 +28,32 @@ public class EmployeeController {
      */
     @PostMapping("/login")
     public R<Employee> login(HttpServletRequest request, @RequestBody Employee employee){
-        //加密密码
-        String password=employee.getPassword();
-        password= DigestUtils.md5DigestAsHex(password.getBytes());
+        // 加密密码
+        String password = employee.getPassword();
+        password = DigestUtils.md5DigestAsHex(password.getBytes());
 
-        //查询用户名数据库
-        LambdaQueryWrapper<Employee> queryWrapper=new LambdaQueryWrapper<>();
-        queryWrapper.eq(Employee::getUsername,employee.getUsername());
-        Employee emp=employeeService.getOne(queryWrapper);
+        // 查询用户名数据库
+        LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Employee::getUsername, employee.getUsername());
+        Employee emp = employeeService.getOne(queryWrapper);
 
-        //没有用户名则返回失败结果
-        if(emp==null){
-            return R.error("用户名失败");
+        // 没有用户名则返回失败结果
+        if (emp == null) {
+            return R.error("用户名不存在");
         }
 
-        //密码错误则返回失败结果
-        if(!emp.getPassword().equals(password)){
-            return R.error("密码失败");
+        // 密码错误则返回失败结果
+        if (!emp.getPassword().equals(password)) {
+            return R.error("密码错误");
         }
 
-        //员工状态返回员工禁言结果
-        if(emp.getStatus()==0){
-            return R.error("账号状态失败");
+        // 员工状态返回员工禁用结果
+        if (emp.getStatus() == 0) {
+            return R.error("账号已禁用");
         }
 
-        //登录成功，将员工id存入Session 返回登录成功
-        request.getSession().setAttribute("employee",emp.getId());
+        // 登录成功，将员工id存入Session 返回登录成功
+        request.getSession().setAttribute("employee", emp.getId());
         return R.success(emp);
     }
 
@@ -74,19 +75,9 @@ public class EmployeeController {
      * @return
      */
     @PostMapping
-    public R<String> save(HttpServletRequest request ,@RequestBody Employee employee){
+    public R<String> save(HttpServletRequest request, @RequestBody Employee employee){
         employee.setPassword(DigestUtils.md5DigestAsHex("123456".getBytes()));
-//        employee.setCreateTime(LocalDateTime.now());
-//        employee.setUpdateTime(LocalDateTime.now());
-//
-//        Long empId= (Long) request.getSession().getAttribute("employee");
-//        employee.setCreateUser(empId);
-//        employee.setUpdateUser(empId);
-
-
         employeeService.save(employee);
-
-
         return R.success("添加成功");
     }
 
@@ -98,31 +89,28 @@ public class EmployeeController {
      * @param name
      * @return
      */
-    @PostMapping("/page")
-    public R<Page> page(int page,int pageSize,String name){
+    @GetMapping("/page")
+    public R<Page<Employee>> page(int page, int pageSize, String name){
         //构造分页构造器
-        Page page1=new Page(page,pageSize);
+        Page<Employee> pageInfo = new Page<>(page, pageSize);
 
         //构造条件构造器
-        LambdaQueryWrapper<Employee> queryWrapper=new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper<>();
         //添加过滤条件
-        queryWrapper.like(StringUtils.hasText(name),Employee::getName,name);
+        queryWrapper.like(StringUtils.hasText(name), Employee::getName, name);
         queryWrapper.orderByDesc(Employee::getUpdateTime);
-        employeeService.page(page1,queryWrapper);
-        return R.success(page1);
+        employeeService.page(pageInfo, queryWrapper);
+        return R.success(pageInfo);
     }
 
     /**
      * 修改员工
+     * @param request
      * @param employee
      * @return
      */
-    @PostMapping
-    public R<String> update(HttpServletRequest request,@RequestBody Employee employee){
-        long id=Thread.currentThread().getId();
-//        Long empId= (Long) request.getSession().getAttribute("employee");
-//        employee.setUpdateTime(LocalDateTime.now());
-//        employee.setUpdateUser(empId);
+    @PutMapping
+    public R<String> update(HttpServletRequest request, @RequestBody Employee employee){
         employeeService.updateById(employee);
         return R.success("员工信息修改成功");
     }

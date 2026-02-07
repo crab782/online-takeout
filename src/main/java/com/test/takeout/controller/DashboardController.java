@@ -1,7 +1,18 @@
 package com.test.takeout.controller;
 import org.springframework.web.bind.annotation.*;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
+import java.util.Map;
+import java.math.BigDecimal;
+import com.test.takeout.service.DashboardService;
+import com.test.takeout.vo.ResponseVO;
+import com.test.takeout.vo.OrderVO;
+import com.test.takeout.vo.BusinessTrendVO;
+import com.test.takeout.vo.OrderStatusDistributionVO;
+import com.test.takeout.vo.OrderPriceDistributionVO;
+import com.test.takeout.vo.ShopViewVO;
+import com.test.takeout.dto.BusinessTrendQueryDTO;
+import com.test.takeout.dto.ShopViewsQueryDTO;
 
 @RestController
 @RequestMapping("/api/backend/dashboard")

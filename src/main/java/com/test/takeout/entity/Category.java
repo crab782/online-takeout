@@ -1,37 +1,33 @@
 package com.test.takeout.entity;
-import javax.persistence.*;
-import java.io.Serializable;
-import java.util.Date;
 
-@Entity
-@Table(name = "category")
+import com.baomidou.mybatisplus.annotation.*;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+/**
+ * 分类实体类
+ */
+@TableName("category")
 public class Category implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    @Column(name = "shop_id", nullable = false)
     private Long shopId;
 
-    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @Column(name = "sort")
     private Integer sort;
 
-    @Column(name = "status", nullable = false, length = 20)
     private String status;
 
-    @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
 
     // Getter and Setter methods
     public Long getId() {
@@ -74,19 +70,19 @@ public class Category implements Serializable {
         this.status = status;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -98,7 +94,7 @@ public class Category implements Serializable {
         this.shopId = shopId;
         this.name = name;
         this.status = status;
-        this.createdAt = new Date();
-        this.updatedAt = new Date();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

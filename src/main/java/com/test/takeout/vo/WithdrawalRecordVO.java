@@ -1,7 +1,7 @@
 package com.test.takeout.vo;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 public class WithdrawalRecordVO {
@@ -10,8 +10,8 @@ public class WithdrawalRecordVO {
     private String shopName;
     private BigDecimal amount;
     private String status;
-    private Date applyTime;
-    private Date processTime;
+    private LocalDateTime applyTime;
+    private LocalDateTime processTime;
     private String accountType;
     private String accountNumber;
     private String accountName;

@@ -1,7 +1,11 @@
 package com.test.takeout.controller;
 import org.springframework.web.bind.annotation.*;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
+import com.test.takeout.service.AddressService;
+import com.test.takeout.vo.ResponseVO;
+import com.test.takeout.vo.AddressVO;
+import com.test.takeout.dto.AddressAddDTO;
 
 @RestController
 @RequestMapping("/api/front/address")

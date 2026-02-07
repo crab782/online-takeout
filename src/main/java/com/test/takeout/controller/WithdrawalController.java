@@ -1,6 +1,11 @@
 package com.test.takeout.controller;
 import org.springframework.web.bind.annotation.*;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
+import com.test.takeout.service.WithdrawalService;
+import com.test.takeout.vo.ResponseVO;
+import com.test.takeout.vo.PageResponseVO;
+import com.test.takeout.entity.Withdrawal;
+import com.test.takeout.dto.WithdrawalApplyDTO;
 
 @RestController
 @RequestMapping("/api/backend/withdrawal")

@@ -1,6 +1,12 @@
 package com.test.takeout.controller;
 import org.springframework.web.bind.annotation.*;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
+import com.test.takeout.service.UserService;
+import com.test.takeout.vo.ResponseVO;
+import com.test.takeout.vo.UserVO;
+import com.test.takeout.vo.BalanceVO;
+import com.test.takeout.dto.UserLoginDTO;
+import com.test.takeout.dto.UserRegisterDTO;
 
 @RestController
 @RequestMapping("/api/front/user")

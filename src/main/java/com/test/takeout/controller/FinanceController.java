@@ -1,7 +1,15 @@
 package com.test.takeout.controller;
 import org.springframework.web.bind.annotation.*;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
+import com.test.takeout.service.FinanceService;
+import com.test.takeout.vo.ResponseVO;
+import com.test.takeout.vo.FinanceDataVO;
+import com.test.takeout.vo.PageResult;
+import com.test.takeout.vo.WithdrawalRecordVO;
+import com.test.takeout.vo.WithdrawalTrendVO;
+import com.test.takeout.vo.CashFlowTrendVO;
+import com.test.takeout.dto.WithdrawalProcessDTO;
 
 @RestController
 @RequestMapping("/api/platform/finance")
