@@ -22,7 +22,8 @@ public class UserCheckinServiceImpl extends ServiceImpl<UserCheckinMapper, UserC
         UserCheckin checkin = new UserCheckin();
         checkin.setUserId(userId);
         checkin.setCheckinDate(LocalDate.now());
-        checkin.setCreateTime(LocalDateTime.now());
+        checkin.setCheckinTime(LocalDateTime.now());
+        checkin.setPoints(1);
         return save(checkin);
     }
 
