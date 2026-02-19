@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/category/**").permitAll()
                 .requestMatchers("/dish/**").permitAll()
                 .requestMatchers("/setmeal/**").permitAll()
+                .requestMatchers("/activity/**").permitAll()
                 .requestMatchers("/common/**").permitAll()
                 .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/error").permitAll()
