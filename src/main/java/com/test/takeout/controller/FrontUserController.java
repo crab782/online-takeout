@@ -80,25 +80,55 @@ public class FrontUserController {
         String phone = loginData.get("phone");
         String password = loginData.get("password");
 
+        log.info("手机号：{}", phone);
+        log.info("密码：{}", password);
+
         if (phone == null || phone.isEmpty()) {
+            log.info("手机号为空");
             return R.error("手机号不能为空");
         }
 
         if (password == null || password.isEmpty()) {
+            log.info("密码为空");
             return R.error("密码不能为空");
         }
 
+        // 先根据手机号查询用户
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getPhone, phone);
-        queryWrapper.eq(User::getPassword, password);
         User user = userService.getOne(queryWrapper);
 
+        log.info("查询到的用户：{}", user);
+
         if (user == null) {
+            log.info("用户不存在");
             return R.error("手机号或密码错误");
         }
 
         if (user.getStatus() == 0) {
+            log.info("账号已被禁用");
             return R.error("账号已被禁用");
+        }
+
+        log.info("数据库中的密码：{}", user.getPassword());
+        log.info("输入的密码：{}", password);
+
+        // 验证密码
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        
+        // 测试：生成新的加密密码并验证
+        String testEncodedPassword = passwordEncoder.encode(password);
+        log.info("新生成的加密密码：{}", testEncodedPassword);
+        boolean testMatch = passwordEncoder.matches(password, testEncodedPassword);
+        log.info("新密码匹配结果：{}", testMatch);
+        
+        // 验证原始密码
+        boolean passwordMatch = passwordEncoder.matches(password, user.getPassword());
+        log.info("原始密码匹配结果：{}", passwordMatch);
+
+        if (!passwordMatch) {
+            log.info("密码不匹配");
+            return R.error("手机号或密码错误");
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -108,6 +138,7 @@ public class FrontUserController {
         result.put("username", user.getUsername());
         result.put("avatar", user.getAvatar());
         
+        log.info("登录成功，返回结果：{}", result);
         return R.success(result);
     }
 
@@ -240,14 +271,51 @@ public class FrontUserController {
     }
 
     /**
+     * 临时接口：更新用户密码（用于修复数据库密码问题）
+     * @param phone 手机号
+     * @return 更新结果
+     */
+    @PostMapping("/updatePassword")
+    public R<String> updatePassword(@RequestParam String phone) {
+        log.info("更新用户密码：phone={}", phone);
+        
+        // 根据手机号查询用户
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getPhone, phone);
+        User user = userService.getOne(queryWrapper);
+        
+        if (user == null) {
+            return R.error("用户不存在");
+        }
+        
+        // 使用BCryptPasswordEncoder生成新的加密密码
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        String newPassword = "123456";
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        
+        log.info("原始密码：{}", newPassword);
+        log.info("加密后的密码：{}", encodedPassword);
+        
+        // 更新用户密码
+        user.setPassword(encodedPassword);
+        user.setUpdateTime(LocalDateTime.now());
+        boolean updated = userService.updateById(user);
+        
+        if (updated) {
+            log.info("密码更新成功");
+            return R.success("密码更新成功");
+        } else {
+            log.info("密码更新失败");
+            return R.error("密码更新失败");
+        }
+    }
+
+    /**
      * 退出登录
      * @return 退出结果
      */
     @PostMapping("/loginout")
     public R<String> loginout() {
-        log.info("退出登录");
-
         return R.success("退出成功");
     }
-
 }
