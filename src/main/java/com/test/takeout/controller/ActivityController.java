@@ -1,23 +1,25 @@
 package com.test.takeout.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.test.takeout.common.R;
 import com.test.takeout.entity.Activity;
 import com.test.takeout.entity.UserCheckin;
 import com.test.takeout.service.ActivityService;
 import com.test.takeout.service.UserCheckinService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.*;
 
-/**
- * 活动控制器，处理活动相关的请求
- */
 @Slf4j
 @RestController
 @RequestMapping("/activity")
@@ -41,9 +43,6 @@ public class ActivityController {
 
         BigDecimal couponAmount = new BigDecimal("0.00");
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("amount", couponAmount);
-
         return R.success(couponAmount);
     }
 
@@ -61,7 +60,7 @@ public class ActivityController {
 
         Long userId = (Long) request.getAttribute("userId");
         if (userId == null) {
-            userId = 1L;
+            return R.error("用户未登录，请先登录");
         }
 
         LocalDate now = LocalDate.now();
@@ -109,7 +108,7 @@ public class ActivityController {
 
         Long userId = (Long) request.getAttribute("userId");
         if (userId == null) {
-            userId = 1L;
+            return R.error("用户未登录，请先登录");
         }
 
         if (userCheckinService.hasCheckedToday(userId)) {
@@ -134,7 +133,7 @@ public class ActivityController {
 
         Long userId = (Long) request.getAttribute("userId");
         if (userId == null) {
-            userId = 1L;
+            return R.error("用户未登录，请先登录");
         }
 
         List<UserCheckin> checkinList = userCheckinService.getRecordsByWeek(userId);
@@ -149,7 +148,7 @@ public class ActivityController {
 
         List<Map<String, Object>> weekRecords = new ArrayList<>();
         String[] weekDays = {"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
-        
+
         for (int i = 0; i < 7; i++) {
             LocalDate date = startOfWeek.plusDays(i);
             Map<String, Object> record = new HashMap<>();
@@ -178,5 +177,4 @@ public class ActivityController {
 
         return R.success(activities);
     }
-
 }

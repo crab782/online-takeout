@@ -15,7 +15,7 @@ public class JwtUtil {
     /**
      * 密钥
      */
-    private static final String SECRET_KEY = "your-secret-key";
+    private static final String SECRET_KEY = "your-secret-key-here-should-be-longer-for-security";
 
     /**
      * 过期时间（毫秒）
@@ -35,6 +35,7 @@ public class JwtUtil {
         // 创建token
         return Jwts.builder()
                 .setClaims(claims)
+                .setSubject(userId.toString())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRE_TIME))
                 .setIssuedAt(new Date())
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
@@ -47,10 +48,14 @@ public class JwtUtil {
      * @return claims
      */
     public static Claims parseToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(SECRET_KEY)
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parser()
+                    .setSigningKey(SECRET_KEY)
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Token解析失败: " + e.getMessage());
+        }
     }
 
     /**
@@ -59,8 +64,12 @@ public class JwtUtil {
      * @return 用户ID
      */
     public static Long getUserIdFromToken(String token) {
-        Claims claims = parseToken(token);
-        return Long.valueOf(claims.get("userId").toString());
+        try {
+            Claims claims = parseToken(token);
+            return Long.valueOf(claims.get("userId").toString());
+        } catch (Exception e) {
+            throw new RuntimeException("获取用户ID失败: " + e.getMessage());
+        }
     }
 
     /**
@@ -71,10 +80,38 @@ public class JwtUtil {
     public static boolean validateToken(String token) {
         try {
             parseToken(token);
-            return true;
+            return !isTokenExpired(token);
         } catch (Exception e) {
             return false;
         }
     }
 
+    /**
+     * 判断token是否过期
+     * @param token token
+     * @return 是否过期
+     */
+    private static boolean isTokenExpired(String token) {
+        try {
+            Claims claims = parseToken(token);
+            Date expiration = claims.getExpiration();
+            return expiration.before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    /**
+     * 获取token的过期时间
+     * @param token token
+     * @return 过期时间
+     */
+    public static Date getExpirationDateFromToken(String token) {
+        try {
+            Claims claims = parseToken(token);
+            return claims.getExpiration();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }
