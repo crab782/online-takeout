@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Login Test</h1>
+    <form id="loginForm">
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" value="shop_admin2">
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" value="123">
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    <div id="response"></div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            axios.post('http://localhost:8081/employee/login', {
+                username: username,
+                password: password
+            })
+            .then(function(response) {
+                document.getElementById('response').innerHTML = '<h2>Response:</h2><pre>' + JSON.stringify(response.data, null, 2) + '</pre>';
+            })
+            .catch(function(error) {
+                document.getElementById('response').innerHTML = '<h2>Error:</h2><pre>' + JSON.stringify(error.response.data, null, 2) + '</pre>';
+            });
+        });
+    </script>
+</body>
+</html>
