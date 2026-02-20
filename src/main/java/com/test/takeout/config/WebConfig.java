@@ -37,7 +37,11 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/user/updatePassword") // 排除更新密码接口
                 .excludePathPatterns("/user/loginout") // 排除登出接口
                 .excludePathPatterns("/employee/login") // 排除登录接口
-                .excludePathPatterns("/employee/logout"); // 排除登出接口
+                .excludePathPatterns("/employee/logout") // 排除登出接口
+                .excludePathPatterns("/backend/user/info") // 排除后端用户信息接口
+                .excludePathPatterns("/backend/user/logout") // 排除后端用户登出接口
+                .excludePathPatterns("/backend/dashboard/**") // 排除后端仪表盘相关接口
+                .excludePathPatterns("/order/page"); // 排除订单分页查询接口
     }
 
 }

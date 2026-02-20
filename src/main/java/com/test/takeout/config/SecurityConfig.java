@@ -37,6 +37,8 @@ public class SecurityConfig {
                 .requestMatchers("/user/updatePassword").permitAll()
                 .requestMatchers("/user/info").permitAll()
                 .requestMatchers("/user/loginout").permitAll()
+                .requestMatchers("/backend/user/info").permitAll()
+                .requestMatchers("/backend/user/logout").permitAll()
                 .requestMatchers("/employee/login").permitAll()
                 .requestMatchers("/employee/logout").permitAll()
                 .requestMatchers("/store/**").permitAll()
@@ -50,6 +52,7 @@ public class SecurityConfig {
                 .requestMatchers("/common/**").permitAll()
                 .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers("/test/**").permitAll()
                 
                 // 其他所有请求需要认证
                 .anyRequest().permitAll()
