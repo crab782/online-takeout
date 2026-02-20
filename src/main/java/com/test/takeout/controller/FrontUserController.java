@@ -132,7 +132,8 @@ public class FrontUserController {
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("token", "mock_token_" + System.currentTimeMillis());
+        String token = com.test.takeout.common.JwtUtil.generateToken(user.getId());
+        result.put("token", token);
         result.put("userId", user.getId());
         result.put("phone", phone);
         result.put("username", user.getUsername());
