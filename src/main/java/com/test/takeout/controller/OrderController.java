@@ -15,6 +15,8 @@ import com.test.takeout.service.ShoppingCartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+//import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -38,14 +40,18 @@ public class OrderController {
 
     private final ShoppingCartService shoppingCartService;
 
+    private final HttpServletRequest request;
+
     public OrderController(OrdersService ordersService,
                        AddressBookService addressBookService,
                        OrderDetailService orderDetailService,
-                       ShoppingCartService shoppingCartService) {
+                       ShoppingCartService shoppingCartService,
+                       HttpServletRequest request) {
         this.ordersService = ordersService;
         this.addressBookService = addressBookService;
         this.orderDetailService = orderDetailService;
         this.shoppingCartService = shoppingCartService;
+        this.request = request;
     }
 
     /**
@@ -150,7 +156,7 @@ public class OrderController {
     public R<List<Orders>> list() {
         log.info("查询当前用户的所有订单");
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
 
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Orders::getUserId, userId);
@@ -172,7 +178,7 @@ public class OrderController {
                                      @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
         log.info("分页查询当前用户的订单：page={}, pageSize={}", page, pageSize);
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
 
         Page<Orders> pageInfo = new Page<>(page, pageSize);
 
@@ -407,7 +413,7 @@ public class OrderController {
     public R<String> again(@RequestBody Orders orders) {
         log.info("再来一单：orders={}", orders);
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
 
         Orders originalOrder = ordersService.getById(orders.getId());
         if (originalOrder == null) {
@@ -519,7 +525,7 @@ public class OrderController {
     public R<Orders> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO) {
         log.info("提交订单：ordersSubmitDTO={}", ordersSubmitDTO);
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
 
         AddressBook addressBook = addressBookService.getById(ordersSubmitDTO.getAddressBookId());
         if (addressBook == null) {
