@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.test.takeout.common.R;
 import com.test.takeout.entity.Dish;
+import com.test.takeout.entity.Category;
 import com.test.takeout.service.DishService;
+import com.test.takeout.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +24,9 @@ public class DishController {
 
     @Autowired
     private DishService dishService;
+    
+    @Autowired
+    private CategoryService categoryService;
 
     /**
      * 分页查询菜品列表
@@ -156,6 +161,30 @@ public class DishController {
 
         // 构建查询条件
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 处理店铺ID参数
+        if (params.containsKey("storeId")) {
+            try {
+                Long storeId = Long.parseLong(params.get("storeId").toString());
+                // 先查询该店铺下的所有分类ID
+                LambdaQueryWrapper<Category> categoryQueryWrapper = new LambdaQueryWrapper<>();
+                categoryQueryWrapper.eq(Category::getStoreId, storeId);
+                categoryQueryWrapper.eq(Category::getStatus, 1); // 只查询启用状态的分类
+                List<Category> categories = categoryService.list(categoryQueryWrapper);
+                
+                if (categories != null && !categories.isEmpty()) {
+                    // 提取分类ID列表
+                    List<Long> categoryIds = categories.stream().map(Category::getId).collect(java.util.stream.Collectors.toList());
+                    // 根据分类ID列表查询菜品
+                    queryWrapper.in(Dish::getCategoryId, categoryIds);
+                } else {
+                    // 如果店铺下没有分类，返回空列表
+                    return R.success(new java.util.ArrayList<>());
+                }
+            } catch (NumberFormatException e) {
+                log.error("店铺ID参数格式错误：{}", params.get("storeId"));
+            }
+        }
         
         // 处理分类ID参数
         if (params.containsKey("categoryId")) {

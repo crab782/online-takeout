@@ -3,6 +3,8 @@ package com.test.takeout.common;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +25,14 @@ public class JwtUtil {
     private static final long EXPIRE_TIME = 86400000L; // 24小时
 
     /**
+     * 获取密钥
+     * @return 密钥
+     */
+    private static Key getKey() {
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    }
+
+    /**
      * 生成token
      * @param userId 用户ID
      * @return token
@@ -38,7 +48,7 @@ public class JwtUtil {
                 .setSubject(userId.toString())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRE_TIME))
                 .setIssuedAt(new Date())
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -49,8 +59,9 @@ public class JwtUtil {
      */
     public static Claims parseToken(String token) {
         try {
-            return Jwts.parser()
-                    .setSigningKey(SECRET_KEY)
+            return Jwts.parserBuilder()
+                    .setSigningKey(getKey())
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {

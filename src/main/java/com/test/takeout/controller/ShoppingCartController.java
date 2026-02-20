@@ -8,6 +8,7 @@ import com.test.takeout.entity.ShoppingCart;
 import com.test.takeout.service.DishService;
 import com.test.takeout.service.SetmealService;
 import com.test.takeout.service.ShoppingCartService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -30,13 +31,17 @@ public class ShoppingCartController {
 
     /**
      * 查询购物车商品列表
+     * @param request 请求对象
      * @return 购物车商品列表
      */
     @GetMapping("/list")
-    public R<List<ShoppingCart>> list() {
+    public R<List<ShoppingCart>> list(HttpServletRequest request) {
         log.info("查询购物车商品列表");
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.error("用户未登录，请先登录");
+        }
 
         LambdaQueryWrapper<ShoppingCart> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ShoppingCart::getUserId, userId);
@@ -50,13 +55,17 @@ public class ShoppingCartController {
     /**
      * 添加商品到购物车
      * @param shoppingCart 购物车商品信息
+     * @param request 请求对象
      * @return 添加结果
      */
     @PostMapping("/add")
-    public R<ShoppingCart> add(@RequestBody ShoppingCart shoppingCart) {
+    public R<ShoppingCart> add(@RequestBody ShoppingCart shoppingCart, HttpServletRequest request) {
         log.info("添加商品到购物车：shoppingCart={}", shoppingCart);
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.error("用户未登录，请先登录");
+        }
         shoppingCart.setUserId(userId);
 
         Long dishId = shoppingCart.getDishId();
@@ -103,13 +112,17 @@ public class ShoppingCartController {
     /**
      * 购物车修改商品（减少数量）
      * @param shoppingCart 购物车商品信息
+     * @param request 请求对象
      * @return 修改结果
      */
     @PostMapping("/sub")
-    public R<ShoppingCart> sub(@RequestBody ShoppingCart shoppingCart) {
+    public R<ShoppingCart> sub(@RequestBody ShoppingCart shoppingCart, HttpServletRequest request) {
         log.info("购物车修改商品：shoppingCart={}", shoppingCart);
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.error("用户未登录，请先登录");
+        }
         shoppingCart.setUserId(userId);
 
         Long dishId = shoppingCart.getDishId();
@@ -144,13 +157,17 @@ public class ShoppingCartController {
 
     /**
      * 清空购物车
+     * @param request 请求对象
      * @return 清空结果
      */
     @DeleteMapping("/clean")
-    public R<String> clean() {
+    public R<String> clean(HttpServletRequest request) {
         log.info("清空购物车");
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.error("用户未登录，请先登录");
+        }
 
         LambdaQueryWrapper<ShoppingCart> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ShoppingCart::getUserId, userId);

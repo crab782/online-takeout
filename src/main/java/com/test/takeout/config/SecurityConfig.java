@@ -44,12 +44,15 @@ public class SecurityConfig {
                 .requestMatchers("/dish/**").permitAll()
                 .requestMatchers("/setmeal/**").permitAll()
                 .requestMatchers("/activity/**").permitAll()
+                .requestMatchers("/shoppingCart/**").permitAll()
+                .requestMatchers("/order/**").permitAll()
+                .requestMatchers("/addressBook/**").permitAll()
                 .requestMatchers("/common/**").permitAll()
                 .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 
                 // 其他所有请求需要认证
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             )
             
             // 禁用表单登录

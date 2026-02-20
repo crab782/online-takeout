@@ -25,6 +25,10 @@ public class Employee implements Serializable {
 
     private String email;
 
+    private Integer role;
+
+    private Long storeId;
+
     private Integer status;
 
     @TableField(fill = FieldFill.INSERT)
@@ -80,6 +84,22 @@ public class Employee implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Integer getRole() {
+        return role;
+    }
+
+    public void setRole(Integer role) {
+        this.role = role;
+    }
+
+    public Long getStoreId() {
+        return storeId;
+    }
+
+    public void setStoreId(Long storeId) {
+        this.storeId = storeId;
     }
 
     public Integer getStatus() {

@@ -5,6 +5,7 @@ import com.test.takeout.common.R;
 import com.test.takeout.entity.User;
 import com.test.takeout.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -145,13 +146,18 @@ public class FrontUserController {
 
     /**
      * 获取当前登录用户信息
+     * @param request HttpServletRequest
      * @return 用户信息
      */
     @GetMapping("/info")
-    public R<User> getUserInfo() {
+    public R<User> getUserInfo(HttpServletRequest request) {
         log.info("获取当前登录用户信息");
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.error("用户未登录");
+        }
+        
         User user = userService.getById(userId);
         if (user == null) {
             return R.error("用户不存在");
@@ -164,12 +170,18 @@ public class FrontUserController {
 
     /**
      * 修改用户密码
+     * @param request HttpServletRequest
      * @param passwordData 密码数据
      * @return 修改结果
      */
     @PostMapping("/password")
-    public R<String> changePassword(@RequestBody Map<String, String> passwordData) {
+    public R<String> changePassword(HttpServletRequest request, @RequestBody Map<String, String> passwordData) {
         log.info("修改用户密码：passwordData={}", passwordData);
+
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.error("用户未登录");
+        }
 
         String oldPassword = passwordData.get("oldPassword");
         String newPassword = passwordData.get("newPassword");
@@ -191,7 +203,6 @@ public class FrontUserController {
             return R.error("两次输入的密码不一致");
         }
 
-        Long userId = 1L;
         User user = userService.getById(userId);
         if (user == null) {
             return R.error("用户不存在");
@@ -214,14 +225,19 @@ public class FrontUserController {
 
     /**
      * 更新用户信息
+     * @param request HttpServletRequest
      * @param userData 用户数据
      * @return 更新结果
      */
     @PostMapping("/update")
-    public R<String> updateUserInfo(@RequestBody Map<String, String> userData) {
+    public R<String> updateUserInfo(HttpServletRequest request, @RequestBody Map<String, String> userData) {
         log.info("更新用户信息：userData={}", userData);
 
-        Long userId = 1L;
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.error("用户未登录");
+        }
+
         User user = userService.getById(userId);
         if (user == null) {
             return R.error("用户不存在");

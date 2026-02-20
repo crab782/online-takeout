@@ -23,7 +23,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (token == null || token.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"code\": 0, \"msg\": \"未授权访问\", \"data\": null}");
+            response.getWriter().write("{\"code\": 0, \"msg\": \"未登录\", \"data\": null}");
             return false;
         }
 
@@ -31,7 +31,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (!token.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"code\": 0, \"msg\": \"token格式错误\", \"data\": null}");
+            response.getWriter().write("{\"code\": 0, \"msg\": \"未登录\", \"data\": null}");
             return false;
         }
 
@@ -42,7 +42,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (!JwtUtil.validateToken(tokenValue)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"code\": 0, \"msg\": \"token无效\", \"data\": null}");
+            response.getWriter().write("{\"code\": 0, \"msg\": \"未登录\", \"data\": null}");
             return false;
         }
 
