@@ -30,6 +30,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/user/info") // 拦截获取用户信息接口
                 .addPathPatterns("/user/password") // 拦截修改密码接口
                 .addPathPatterns("/user/update") // 拦截更新用户信息接口
+                .addPathPatterns("/backend/**") // 拦截后端管理相关接口
                 .excludePathPatterns("/user/login") // 排除登录接口
                 .excludePathPatterns("/user/register") // 排除注册接口
                 .excludePathPatterns("/user/code") // 排除获取验证码接口
