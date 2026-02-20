@@ -52,18 +52,90 @@ public class OrderController {
      * 分页查询订单列表
      * @param page 页码
      * @param pageSize 每页数量
+     * @param shopId 店铺ID（可选）
+     * @param orderNumber 订单号（可选）
+     * @param beginTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
+     * @param status 订单状态（可选）
      * @return 订单列表
      */
     @GetMapping("/page")
     public R<Page<Orders>> page(@RequestParam(value = "page", defaultValue = "1") Integer page,
-                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
-        log.info("分页查询订单列表：page={}, pageSize={}", page, pageSize);
+                                @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+                                @RequestParam(value = "shopId", required = false) Long shopId,
+                                @RequestParam(value = "orderNumber", required = false) String orderNumber,
+                                @RequestParam(value = "beginTime", required = false) String beginTime,
+                                @RequestParam(value = "endTime", required = false) String endTime,
+                                @RequestParam(value = "status", required = false) String status) {
+        log.info("分页查询订单列表：page={}, pageSize={}, shopId={}, orderNumber={}, beginTime={}, endTime={}, status={}", page, pageSize, shopId, orderNumber, beginTime, endTime, status);
 
         // 构建分页构造器
         Page<Orders> pageInfo = new Page<>(page, pageSize);
 
         // 构建条件构造器
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 根据店铺ID过滤
+        if (shopId != null) {
+            queryWrapper.eq(Orders::getStoreId, shopId);
+        }
+        
+        // 根据订单号过滤
+        if (orderNumber != null && !orderNumber.isEmpty()) {
+            queryWrapper.like(Orders::getNumber, orderNumber);
+        }
+        
+        // 根据开始时间过滤
+        if (beginTime != null && !beginTime.isEmpty()) {
+            try {
+                LocalDateTime startTime = java.time.LocalDateTime.parse(beginTime.replace(" ", "T"));
+                queryWrapper.ge(Orders::getCreateTime, startTime);
+            } catch (Exception e) {
+                log.error("开始时间格式错误：{}", beginTime);
+            }
+        }
+        
+        // 根据结束时间过滤
+        if (endTime != null && !endTime.isEmpty()) {
+            try {
+                LocalDateTime endTimeObj = java.time.LocalDateTime.parse(endTime.replace(" ", "T"));
+                queryWrapper.le(Orders::getCreateTime, endTimeObj);
+            } catch (Exception e) {
+                log.error("结束时间格式错误：{}", endTime);
+            }
+        }
+        
+        // 根据订单状态过滤
+        if (status != null && !status.isEmpty()) {
+            // 处理状态字符串，转换为对应的状态码
+            switch (status) {
+                case "pending":
+                    queryWrapper.eq(Orders::getStatus, 0);
+                    break;
+                case "pay_success":
+                    queryWrapper.eq(Orders::getStatus, 1);
+                    break;
+                case "accepted":
+                    queryWrapper.eq(Orders::getStatus, 2);
+                    break;
+                case "preparing":
+                    queryWrapper.eq(Orders::getStatus, 3);
+                    break;
+                case "rider_accepted":
+                    queryWrapper.eq(Orders::getStatus, 4);
+                    break;
+                case "delivering":
+                    queryWrapper.eq(Orders::getStatus, 5);
+                    break;
+                case "completed":
+                    queryWrapper.eq(Orders::getStatus, 6);
+                    break;
+                case "cancelled":
+                    queryWrapper.eq(Orders::getStatus, 7);
+                    break;
+            }
+        }
+        
         // 添加排序条件，按照订单创建时间降序排列
         queryWrapper.orderByDesc(Orders::getCreateTime);
 

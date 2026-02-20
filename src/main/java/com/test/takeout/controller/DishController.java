@@ -33,11 +33,12 @@ public class DishController {
      * @param page 页码
      * @param pageSize 每页数量
      * @param name 菜品名称（可选）
+     * @param shopId 店铺ID（可选）
      * @return 分页查询结果
      */
     @GetMapping("/page")
-    public R<Page<Dish>> getDishPage(int page, int pageSize, String name) {
-        log.info("分页查询菜品列表：page={}, pageSize={}, name={}", page, pageSize, name);
+    public R<Page<Dish>> getDishPage(int page, int pageSize, String name, Long shopId) {
+        log.info("分页查询菜品列表：page={}, pageSize={}, name={}, shopId={}", page, pageSize, name, shopId);
 
         // 构建分页对象
         Page<Dish> pageInfo = new Page<>(page, pageSize);
@@ -47,6 +48,26 @@ public class DishController {
         if (name != null && !name.isEmpty()) {
             queryWrapper.like(Dish::getName, name);
         }
+        
+        // 处理店铺ID参数
+        if (shopId != null) {
+            // 先查询该店铺下的所有分类ID
+            LambdaQueryWrapper<Category> categoryQueryWrapper = new LambdaQueryWrapper<>();
+            categoryQueryWrapper.eq(Category::getStoreId, shopId);
+            categoryQueryWrapper.eq(Category::getStatus, 1); // 只查询启用状态的分类
+            List<Category> categories = categoryService.list(categoryQueryWrapper);
+            
+            if (categories != null && !categories.isEmpty()) {
+                // 提取分类ID列表
+                List<Long> categoryIds = categories.stream().map(Category::getId).collect(java.util.stream.Collectors.toList());
+                // 根据分类ID列表查询菜品
+                queryWrapper.in(Dish::getCategoryId, categoryIds);
+            } else {
+                // 如果店铺下没有分类，返回空列表
+                return R.success(pageInfo);
+            }
+        }
+        
         // 按照更新时间倒序排列
         queryWrapper.orderByDesc(Dish::getUpdateTime);
 

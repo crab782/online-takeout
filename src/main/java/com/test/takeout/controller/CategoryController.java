@@ -29,29 +29,31 @@ public class CategoryController {
      * 分页查询分类列表
      * @param page 页码
      * @param pageSize 每页大小
+     * @param storeId 店铺ID（可选）
      * @return 分类列表
      */
     @GetMapping("/page")
-    public R<Map<String, Object>> page(int page, int pageSize) {
-        log.info("分页查询分类列表：page={}, pageSize={}", page, pageSize);
+    public R<Page<Category>> page(int page, int pageSize, Long storeId) {
+        log.info("分页查询分类列表：page={}, pageSize={}, storeId={}", page, pageSize, storeId);
 
         // 构造分页构造器
         Page<Category> pageInfo = new Page<>(page, pageSize);
 
         // 构造条件构造器
         LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 根据店铺ID过滤
+        if (storeId != null) {
+            queryWrapper.eq(Category::getStoreId, storeId);
+        }
+        
         // 添加排序条件，按照 sort 字段排序
         queryWrapper.orderByAsc(Category::getSort);
 
         // 执行分页查询
         categoryService.page(pageInfo, queryWrapper);
 
-        // 构建响应数据
-        Map<String, Object> data = new HashMap<>();
-        data.put("list", pageInfo.getRecords());
-        data.put("total", pageInfo.getTotal());
-
-        return R.success(data);
+        return R.success(pageInfo);
     }
 
     /**

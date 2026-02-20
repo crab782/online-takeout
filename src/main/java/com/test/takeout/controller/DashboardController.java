@@ -3,7 +3,9 @@ package com.test.takeout.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.test.takeout.common.R;
+import com.test.takeout.entity.Employee;
 import com.test.takeout.entity.Orders;
+import com.test.takeout.service.EmployeeService;
 import com.test.takeout.service.OrdersService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,18 +33,37 @@ public class DashboardController {
 
     @Autowired
     private OrdersService ordersService;
+    
+    @Autowired
+    private EmployeeService employeeService;
 
     /**
      * 获取待处理订单
+     * @param request 请求对象
      * @return 待处理订单列表
      */
     @GetMapping("/pending-orders")
-    public R<Map<String, Object>> getPendingOrders() {
+    public R<Map<String, Object>> getPendingOrders(HttpServletRequest request) {
         log.info("获取待处理订单");
+
+        // 从请求中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("用户ID: {}", userId);
+
+        // 查询员工信息，获取store_id
+        Employee employee = employeeService.getById(userId);
+        Long storeId = null;
+        if (employee != null) {
+            storeId = employee.getStoreId();
+            log.info("店铺ID: {}", storeId);
+        }
 
         // 构造条件构造器，查询状态为待处理的订单
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Orders::getStatus, 0); // 0表示待处理
+        if (storeId != null) {
+            queryWrapper.eq(Orders::getStoreId, storeId);
+        }
         queryWrapper.orderByDesc(Orders::getCreateTime);
 
         // 执行查询
@@ -57,11 +79,24 @@ public class DashboardController {
 
     /**
      * 获取当天订单统计
+     * @param request 请求对象
      * @return 当天订单统计数据
      */
     @GetMapping("/today-stats")
-    public R<Map<String, Object>> getTodayOrderStats() {
+    public R<Map<String, Object>> getTodayOrderStats(HttpServletRequest request) {
         log.info("获取当天订单统计");
+
+        // 从请求中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("用户ID: {}", userId);
+
+        // 查询员工信息，获取store_id
+        Employee employee = employeeService.getById(userId);
+        Long storeId = null;
+        if (employee != null) {
+            storeId = employee.getStoreId();
+            log.info("店铺ID: {}", storeId);
+        }
 
         // 获取当天的开始时间和结束时间
         LocalDateTime now = LocalDateTime.now();
@@ -72,6 +107,9 @@ public class DashboardController {
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.ge(Orders::getCreateTime, startOfDay);
         queryWrapper.le(Orders::getCreateTime, endOfDay);
+        if (storeId != null) {
+            queryWrapper.eq(Orders::getStoreId, storeId);
+        }
 
         List<Orders> todayOrders = ordersService.list(queryWrapper);
 
@@ -100,11 +138,24 @@ public class DashboardController {
 
     /**
      * 获取近30日业务趋势数据
+     * @param request 请求对象
      * @return 近30日业务趋势数据
      */
     @GetMapping("/business-trend")
-    public R<Map<String, Object>> getBusinessTrend() {
+    public R<Map<String, Object>> getBusinessTrend(HttpServletRequest request) {
         log.info("获取近30日业务趋势数据");
+
+        // 从请求中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("用户ID: {}", userId);
+
+        // 查询员工信息，获取store_id
+        Employee employee = employeeService.getById(userId);
+        Long storeId = null;
+        if (employee != null) {
+            storeId = employee.getStoreId();
+            log.info("店铺ID: {}", storeId);
+        }
 
         // 获取当前时间
         LocalDateTime now = LocalDateTime.now();
@@ -128,6 +179,9 @@ public class DashboardController {
             LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.ge(Orders::getCreateTime, startOfDay);
             queryWrapper.le(Orders::getCreateTime, endOfDay);
+            if (storeId != null) {
+                queryWrapper.eq(Orders::getStoreId, storeId);
+            }
 
             List<Orders> dayOrders = ordersService.list(queryWrapper);
 
@@ -154,14 +208,31 @@ public class DashboardController {
 
     /**
      * 获取用户支出数据
+     * @param request 请求对象
      * @return 用户支出数据
      */
     @GetMapping("/user-expenses")
-    public R<Map<String, Object>> getUserExpenses() {
+    public R<Map<String, Object>> getUserExpenses(HttpServletRequest request) {
         log.info("获取用户支出数据");
 
+        // 从请求中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("用户ID: {}", userId);
+
+        // 查询员工信息，获取store_id
+        Employee employee = employeeService.getById(userId);
+        Long storeId = null;
+        if (employee != null) {
+            storeId = employee.getStoreId();
+            log.info("店铺ID: {}", storeId);
+        }
+
         // 查询所有订单
-        List<Orders> allOrders = ordersService.list();
+        LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
+        if (storeId != null) {
+            queryWrapper.eq(Orders::getStoreId, storeId);
+        }
+        List<Orders> allOrders = ordersService.list(queryWrapper);
 
         // 统计用户数量（去重）
         long userCounts = allOrders.stream()
@@ -192,11 +263,24 @@ public class DashboardController {
 
     /**
      * 获取今日订单状态分布
+     * @param request 请求对象
      * @return 今日订单状态分布
      */
     @GetMapping("/today-order-status")
-    public R<Map<String, Object>> getTodayOrderStatus() {
+    public R<Map<String, Object>> getTodayOrderStatus(HttpServletRequest request) {
         log.info("获取今日订单状态分布");
+
+        // 从请求中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("用户ID: {}", userId);
+
+        // 查询员工信息，获取store_id
+        Employee employee = employeeService.getById(userId);
+        Long storeId = null;
+        if (employee != null) {
+            storeId = employee.getStoreId();
+            log.info("店铺ID: {}", storeId);
+        }
 
         // 获取当天的开始时间和结束时间
         LocalDateTime now = LocalDateTime.now();
@@ -207,6 +291,9 @@ public class DashboardController {
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.ge(Orders::getCreateTime, startOfDay);
         queryWrapper.le(Orders::getCreateTime, endOfDay);
+        if (storeId != null) {
+            queryWrapper.eq(Orders::getStoreId, storeId);
+        }
 
         List<Orders> todayOrders = ordersService.list(queryWrapper);
 
@@ -234,11 +321,24 @@ public class DashboardController {
 
     /**
      * 获取今日订单价格分布
+     * @param request 请求对象
      * @return 今日订单价格分布
      */
     @GetMapping("/today-order-price")
-    public R<Map<String, Object>> getTodayOrderPrice() {
+    public R<Map<String, Object>> getTodayOrderPrice(HttpServletRequest request) {
         log.info("获取今日订单价格分布");
+
+        // 从请求中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("用户ID: {}", userId);
+
+        // 查询员工信息，获取store_id
+        Employee employee = employeeService.getById(userId);
+        Long storeId = null;
+        if (employee != null) {
+            storeId = employee.getStoreId();
+            log.info("店铺ID: {}", storeId);
+        }
 
         // 获取当天的开始时间和结束时间
         LocalDateTime now = LocalDateTime.now();
@@ -249,6 +349,9 @@ public class DashboardController {
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.ge(Orders::getCreateTime, startOfDay);
         queryWrapper.le(Orders::getCreateTime, endOfDay);
+        if (storeId != null) {
+            queryWrapper.eq(Orders::getStoreId, storeId);
+        }
 
         List<Orders> todayOrders = ordersService.list(queryWrapper);
 
