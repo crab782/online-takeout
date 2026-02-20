@@ -30,7 +30,7 @@ public class Orders implements Serializable {
     private String number;
 
     /**
-     * 订单状态（0-待处理，1-已完成，2-已取消）
+     * 订单状态（0-待处理，1-商家已接单，2-准备中，3-骑手已接单，4-配送中，5-已完成，6-已取消）
      */
     private Integer status;
 

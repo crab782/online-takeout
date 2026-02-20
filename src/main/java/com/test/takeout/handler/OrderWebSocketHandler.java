@@ -143,11 +143,12 @@ public class OrderWebSocketHandler extends TextWebSocketHandler {
                 LocalDateTime lastCheckTime = lastCheckTimeMap.getOrDefault(storeId, LocalDateTime.now().minusMinutes(1));
                 LocalDateTime currentTime = LocalDateTime.now();
 
-                // 查询该店铺在最近时间内的待处理订单（状态为0-5）
+                // 查询该店铺在最近时间内的待处理订单（状态为1-4）
                 LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(Orders::getStoreId, storeId);
                 queryWrapper.ge(Orders::getCreateTime, lastCheckTime);
-                queryWrapper.lt(Orders::getStatus, 6); // 待处理状态（0-5）
+                queryWrapper.ge(Orders::getStatus, 1); // 商家已接单状态（1-4）
+                queryWrapper.lt(Orders::getStatus, 5);
                 queryWrapper.orderByDesc(Orders::getCreateTime);
 
                 List<Orders> newOrders = ordersService.list(queryWrapper);

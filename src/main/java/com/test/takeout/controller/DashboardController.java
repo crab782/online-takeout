@@ -58,9 +58,9 @@ public class DashboardController {
             log.info("店铺ID: {}", storeId);
         }
 
-        // 构造条件构造器，查询状态为待处理的订单
+        // 构造条件构造器，查询状态为商家已接单的订单
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Orders::getStatus, 0); // 0表示待处理
+        queryWrapper.eq(Orders::getStatus, 2); // 2表示商家已接单
         if (storeId != null) {
             queryWrapper.eq(Orders::getStoreId, storeId);
         }

@@ -177,7 +177,7 @@ DROP TABLE IF EXISTS `orders`;
 CREATE TABLE `orders` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
   `number` VARCHAR(50) NOT NULL COMMENT '订单编号',
-  `status` TINYINT DEFAULT 0 COMMENT '订单状态（0-待处理，1-已完成，2-已取消）',
+  `status` TINYINT DEFAULT 2 COMMENT '订单状态（0-待处理，1-已完成，2-已取消，3-商家已接单）',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
   `user_name` VARCHAR(50) DEFAULT NULL COMMENT '用户名',
   `store_id` BIGINT NOT NULL COMMENT '店铺ID',

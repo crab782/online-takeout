@@ -112,26 +112,23 @@ public class OrderController {
                 case "pending":
                     queryWrapper.eq(Orders::getStatus, 0);
                     break;
-                case "pay_success":
+                case "accepted":
                     queryWrapper.eq(Orders::getStatus, 1);
                     break;
-                case "accepted":
+                case "preparing":
                     queryWrapper.eq(Orders::getStatus, 2);
                     break;
-                case "preparing":
+                case "rider_accepted":
                     queryWrapper.eq(Orders::getStatus, 3);
                     break;
-                case "rider_accepted":
+                case "delivering":
                     queryWrapper.eq(Orders::getStatus, 4);
                     break;
-                case "delivering":
+                case "completed":
                     queryWrapper.eq(Orders::getStatus, 5);
                     break;
-                case "completed":
-                    queryWrapper.eq(Orders::getStatus, 6);
-                    break;
                 case "cancelled":
-                    queryWrapper.eq(Orders::getStatus, 7);
+                    queryWrapper.eq(Orders::getStatus, 6);
                     break;
             }
         }
@@ -203,11 +200,12 @@ public class OrderController {
 
         Orders cancelOrder = new Orders();
         cancelOrder.setId(orders.getId());
-        cancelOrder.setStatus(2);
+        cancelOrder.setStatus(6);
         cancelOrder.setUpdateTime(LocalDateTime.now());
 
         boolean success = ordersService.updateById(cancelOrder);
         if (success) {
+            log.info("订单取消成功，订单ID：{}，状态：6（已取消）", orders.getId());
             return R.success("取消订单成功");
         } else {
             return R.error("取消订单失败");
@@ -229,11 +227,12 @@ public class OrderController {
 
         Orders confirmOrder = new Orders();
         confirmOrder.setId(orders.getId());
-        confirmOrder.setStatus(1);
+        confirmOrder.setStatus(5);
         confirmOrder.setUpdateTime(LocalDateTime.now());
 
         boolean success = ordersService.updateById(confirmOrder);
         if (success) {
+            log.info("订单确认收货成功，订单ID：{}，状态：5（已完成）", orders.getId());
             return R.success("确认收货成功");
         } else {
             return R.error("确认收货失败");
@@ -256,6 +255,16 @@ public class OrderController {
             return R.error("订单状态不能为空");
         }
 
+        Orders oldOrder = ordersService.getById(orders.getId());
+        if (oldOrder == null) {
+            log.error("订单不存在，订单ID：{}", orders.getId());
+            return R.error("订单不存在");
+        }
+
+        String statusText = getStatusText(orders.getStatus());
+        log.info("订单状态变更：订单ID={}，订单号={}，原状态={}，新状态={}（{}）", 
+                orders.getId(), oldOrder.getNumber(), oldOrder.getStatus(), orders.getStatus(), statusText);
+
         Orders updateOrder = new Orders();
         updateOrder.setId(orders.getId());
         updateOrder.setStatus(orders.getStatus());
@@ -263,8 +272,12 @@ public class OrderController {
 
         boolean success = ordersService.updateById(updateOrder);
         if (success) {
+            log.info("订单状态更新成功：订单ID={}，订单号={}，新状态={}（{}）", 
+                    orders.getId(), oldOrder.getNumber(), orders.getStatus(), statusText);
             return R.success("更新订单状态成功");
         } else {
+            log.error("订单状态更新失败：订单ID={}，订单号={}，目标状态={}（{}）", 
+                    orders.getId(), oldOrder.getNumber(), orders.getStatus(), statusText);
             return R.error("更新订单状态失败");
         }
     }
@@ -278,11 +291,54 @@ public class OrderController {
     public R<String> update(@RequestBody Orders orders) {
         log.info("修改订单状态：orders={}", orders);
 
+        Orders oldOrder = ordersService.getById(orders.getId());
+        if (oldOrder == null) {
+            log.error("订单不存在，订单ID：{}", orders.getId());
+            return R.error("订单不存在");
+        }
+
+        String statusText = getStatusText(orders.getStatus());
+        log.info("订单状态变更：订单ID={}，订单号={}，原状态={}，新状态={}（{}）", 
+                orders.getId(), oldOrder.getNumber(), oldOrder.getStatus(), orders.getStatus(), statusText);
+
         boolean success = ordersService.updateById(orders);
         if (success) {
+            log.info("订单状态更新成功：订单ID={}，订单号={}，新状态={}（{}）", 
+                    orders.getId(), oldOrder.getNumber(), orders.getStatus(), statusText);
             return R.success("修改订单状态成功");
         } else {
+            log.error("订单状态更新失败：订单ID={}，订单号={}，目标状态={}（{}）", 
+                    orders.getId(), oldOrder.getNumber(), orders.getStatus(), statusText);
             return R.error("修改订单状态失败");
+        }
+    }
+
+    /**
+     * 获取订单状态文本
+     * @param status 订单状态
+     * @return 状态文本
+     */
+    private String getStatusText(Integer status) {
+        if (status == null) {
+            return "未知状态";
+        }
+        switch (status) {
+            case 0:
+                return "待处理";
+            case 1:
+                return "商家已接单";
+            case 2:
+                return "准备中";
+            case 3:
+                return "骑手已接单";
+            case 4:
+                return "配送中";
+            case 5:
+                return "已完成";
+            case 6:
+                return "已取消";
+            default:
+                return "未知状态";
         }
     }
 
@@ -476,12 +532,14 @@ public class OrderController {
         orders.setReceiver(addressBook.getConsignee());
         orders.setAddress(addressBook.getDetail());
         orders.setPhone(addressBook.getPhone());
-        orders.setStatus(0);
+        orders.setStatus(1);
         orders.setPayStatus(0);
         orders.setCreateTime(LocalDateTime.now());
         orders.setUpdateTime(LocalDateTime.now());
 
         ordersService.save(orders);
+
+        log.info("订单创建成功，订单ID：{}，订单号：{}，状态：1（商家已接单）", orders.getId(), orders.getNumber());
 
         List<OrdersSubmitDTO.OrderDetailDTO> orderDetails = ordersSubmitDTO.getOrderDetails();
         if (orderDetails != null && !orderDetails.isEmpty()) {
