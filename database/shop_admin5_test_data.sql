@@ -56,92 +56,154 @@ INSERT INTO `setmeal` (`name`, `category_id`, `price`, `status`, `description`, 
 -- 3. 为喜茶（店铺ID:5）添加订单数据
 -- ============================================
 -- 插入订单数据
-INSERT INTO `orders` (`id`, `number`, `status`, `user_id`, `store_id`, `address_book_id`, `order_time`, `checkout_time`, `pay_method`, `pay_time`, `amount`, `remark`, `create_time`, `update_time`) VALUES
+INSERT INTO `orders` (
+    `id`, `number`, `status`, `user_id`, `user_name`,
+    `store_id`, `store_name`, `amount`, `pay_method`,
+    `pay_status`, `receiver`, `address`, `phone`,
+    `remark`, `create_time`, `update_time`
+) VALUES
 -- 订单1：待付款
-(101, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '001'), 1, 1, 5, 1, NOW(), NULL, NULL, NULL, 38.00, '少冰少糖', NOW(), NOW()),
+(101, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '001'), 1, 1, '测试用户1', 5, '测试店铺', 38.00, 1, 0, '张三', '北京市朝阳区xx路1号', '13800138001', '少冰少糖', NOW(), NOW()),
+
 -- 订单2：待接单
-(102, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '002'), 2, 2, 5, NULL, NOW(), NOW(), 1, NOW(), 68.00, '正常冰正常糖', NOW(), NOW()),
+(102, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '002'), 2, 2, '测试用户2', 5, '测试店铺', 68.00, 1, 1, '李四', '北京市海淀区xx路2号', '13800138002', '正常冰正常糖', NOW(), NOW()),
+
 -- 订单3：待派送
-(103, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '003'), 3, 3, 5, NULL, NOW(), NOW(), 1, NOW(), 48.00, '多冰多糖', NOW(), NOW()),
+(103, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '003'), 3, 3, '测试用户3', 5, '测试店铺', 48.00, 1, 1, '王五', '北京市丰台区xx路3号', '13800138003', '多冰多糖', NOW(), NOW()),
+
 -- 订单4：派送中
-(104, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '004'), 4, 1, 5, 1, NOW(), NOW(), 2, NOW(), 88.00, '少冰正常糖', NOW(), NOW()),
--- 订单5：已完成
-(105, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '005'), 5, 2, 5, NULL, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 50 MINUTE, 1, NOW() - INTERVAL 50 MINUTE, 128.00, '正常冰少糖', NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 10 MINUTE),
--- 订单6：已完成
-(106, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '006'), 5, 3, 5, NULL, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 1 HOUR 50 MINUTE, 2, NOW() - INTERVAL 1 HOUR 50 MINUTE, 58.00, '多冰少糖', NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 1 HOUR),
--- 订单7：已完成
-(107, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '007'), 5, 1, 5, 2, NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 2 HOUR 50 MINUTE, 1, NOW() - INTERVAL 2 HOUR 50 MINUTE, 38.00, '少冰多糖', NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 2 HOUR),
--- 订单8：已完成
-(108, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '008'), 5, 2, 5, NULL, NOW() - INTERVAL 4 HOUR, NOW() - INTERVAL 3 HOUR 50 MINUTE, 2, NOW() - INTERVAL 3 HOUR 50 MINUTE, 68.00, '正常冰多糖', NOW() - INTERVAL 4 HOUR, NOW() - INTERVAL 3 HOUR),
--- 订单9：已完成
-(109, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '009'), 5, 3, 5, NULL, NOW() - INTERVAL 5 HOUR, NOW() - INTERVAL 4 HOUR 50 MINUTE, 1, NOW() - INTERVAL 4 HOUR 50 MINUTE, 48.00, '多冰正常糖', NOW() - INTERVAL 5 HOUR, NOW() - INTERVAL 4 HOUR),
--- 订单10：已完成
-(110, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '010'), 5, 1, 5, 1, NOW() - INTERVAL 6 HOUR, NOW() - INTERVAL 5 HOUR 50 MINUTE, 2, NOW() - INTERVAL 5 HOUR 50 MINUTE, 88.00, '少冰少糖', NOW() - INTERVAL 6 HOUR, NOW() - INTERVAL 5 HOUR);
+(104, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '004'), 4, 1, '测试用户1', 5, '测试店铺', 88.00, 2, 1, '张三', '北京市朝阳区xx路1号', '13800138001', '少冰正常糖', NOW(), NOW()),
 
--- 插入订单明细数据
-INSERT INTO `order_detail` (`id`, `order_id`, `dish_id`, `setmeal_id`, `name`, `image`, `quantity`, `amount`, `create_time`) VALUES
+-- 订单5：已完成（1小时前）
+(105, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '005'), 5, 2, '测试用户2', 5, '测试店铺', 128.00, 1, 1, '李四', '北京市海淀区xx路2号', '13800138002', '正常冰少糖', NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 10 MINUTE),
+
+-- 订单6：已完成（2小时前）
+(106, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '006'), 5, 3, '测试用户3', 5, '测试店铺', 58.00, 2, 1, '王五', '北京市丰台区xx路3号', '13800138003', '多冰少糖', NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 1 HOUR),
+
+-- 订单7：已完成（3小时前）
+(107, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '007'), 5, 1, '测试用户1', 5, '测试店铺', 38.00, 1, 1, '张三', '北京市朝阳区xx路1号', '13800138001', '少冰多糖', NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 2 HOUR),
+
+-- 订单8：已完成（4小时前）
+(108, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '008'), 5, 2, '测试用户2', 5, '测试店铺', 68.00, 2, 1, '李四', '北京市海淀区xx路2号', '13800138002', '正常冰多糖', NOW() - INTERVAL 4 HOUR, NOW() - INTERVAL 3 HOUR),
+
+-- 订单9：已完成（5小时前）
+(109, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '009'), 5, 3, '测试用户3', 5, '测试店铺', 48.00, 1, 1, '王五', '北京市丰台区xx路3号', '13800138003', '多冰正常糖', NOW() - INTERVAL 5 HOUR, NOW() - INTERVAL 4 HOUR),
+
+-- 订单10：已完成（6小时前）
+(110, CONCAT('ORD', DATE_FORMAT(NOW(), '%Y%m%d'), '010'), 5, 1, '测试用户1', 5, '测试店铺', 88.00, 2, 1, '张三', '北京市朝阳区xx路1号', '13800138001', '少冰少糖', NOW() - INTERVAL 6 HOUR, NOW() - INTERVAL 5 HOUR);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+INSERT INTO `order_detail` (
+    `id`, `name`, `order_id`, `dish_id`, `setmeal_id`, 
+    `number`, `amount`
+) VALUES
 -- 订单1明细
-(201, 101, 132, NULL, '芝芝莓莓', 'https://example.com/ht/milktea1.jpg', 1, 28.00, NOW()),
-(202, 101, NULL, NULL, '蛋挞', 'https://example.com/ht/tart1.jpg', 1, 12.00, NOW()),
+(201, '芝芝莓莓', 101, 132, NULL, 1, 28.00),
+(202, '蛋挞', 101, NULL, NULL, 1, 12.00),
 -- 订单2明细
-(203, 102, 132, NULL, '芝芝莓莓', 'https://example.com/ht/milktea1.jpg', 1, 28.00, NOW()),
-(204, 102, 133, NULL, '多肉葡萄', 'https://example.com/ht/milktea2.jpg', 1, 28.00, NOW()),
-(205, 102, NULL, NULL, '鸡翅', 'https://example.com/ht/snack3.jpg', 1, 12.00, NOW()),
+(203, '芝芝莓莓', 102, 132, NULL, 1, 28.00),
+(204, '多肉葡萄', 102, 133, NULL, 1, 28.00),
+(205, '鸡翅', 102, NULL, NULL, 1, 12.00),
 -- 订单3明细
-(206, 103, 132, NULL, '芝芝莓莓', 'https://example.com/ht/milktea1.jpg', 1, 28.00, NOW()),
-(207, 103, 134, NULL, '满杯水果茶', 'https://example.com/ht/fruittea1.jpg', 1, 32.00, NOW()),
-(208, 103, NULL, NULL, '鸡米花', 'https://example.com/ht/snack1.jpg', 1, 15.00, NOW()),
+(206, '芝芝莓莓', 103, 132, NULL, 1, 28.00),
+(207, '满杯水果茶', 103, 134, NULL, 1, 32.00),
+(208, '鸡米花', 103, NULL, NULL, 1, 15.00),
 -- 订单4明细
-(209, 104, 133, NULL, '多肉葡萄', 'https://example.com/ht/milktea2.jpg', 2, 56.00, NOW()),
-(210, 104, NULL, NULL, '鸡翅', 'https://example.com/ht/snack3.jpg', 2, 36.00, NOW()),
+(209, '多肉葡萄', 104, 133, NULL, 2, 56.00),
+(210, '鸡翅', 104, NULL, NULL, 2, 36.00),
 -- 订单5明细
-(211, 105, 132, NULL, '芝芝莓莓', 'https://example.com/ht/milktea1.jpg', 2, 56.00, NOW()),
-(212, 105, 134, NULL, '满杯水果茶', 'https://example.com/ht/fruittea1.jpg', 2, 64.00, NOW()),
-(213, 105, NULL, NULL, '鸡米花', 'https://example.com/ht/snack1.jpg', 1, 15.00, NOW()),
-(214, 105, NULL, NULL, '薯条', 'https://example.com/ht/snack2.jpg', 1, 12.00, NOW()),
+(211, '芝芝莓莓', 105, 132, NULL, 2, 56.00),
+(212, '满杯水果茶', 105, 134, NULL, 2, 64.00),
+(213, '鸡米花', 105, NULL, NULL, 1, 15.00),
+(214, '薯条', 105, NULL, NULL, 1, 12.00),
 -- 订单6明细
-(215, 106, 134, NULL, '满杯水果茶', 'https://example.com/ht/fruittea1.jpg', 1, 32.00, NOW()),
-(216, 106, 135, NULL, '满杯红柚茶', 'https://example.com/ht/fruittea2.jpg', 1, 28.00, NOW()),
-(217, 106, NULL, NULL, '薯条', 'https://example.com/ht/snack2.jpg', 1, 12.00, NOW()),
-(218, 106, NULL, NULL, '洋葱圈', 'https://example.com/ht/snack5.jpg', 1, 10.00, NOW()),
+(215, '满杯水果茶', 106, 134, NULL, 1, 32.00),
+(216, '满杯红柚茶', 106, 135, NULL, 1, 28.00),
+(217, '薯条', 106, NULL, NULL, 1, 12.00),
+(218, '洋葱圈', 106, NULL, NULL, 1, 10.00),
 -- 订单7明细
-(219, 107, 136, NULL, '珍珠奶茶', 'https://example.com/ht/bobatea1.jpg', 1, 22.00, NOW()),
-(220, 107, NULL, NULL, '蛋挞', 'https://example.com/ht/tart1.jpg', 1, 12.00, NOW()),
-(221, 107, NULL, NULL, '洋葱圈', 'https://example.com/ht/snack5.jpg', 1, 10.00, NOW()),
+(219, '珍珠奶茶', 107, 136, NULL, 1, 22.00),
+(220, '蛋挞', 107, NULL, NULL, 1, 12.00),
+(221, '洋葱圈', 107, NULL, NULL, 1, 10.00),
 -- 订单8明细
-(222, 108, 136, NULL, '珍珠奶茶', 'https://example.com/ht/bobatea1.jpg', 2, 44.00, NOW()),
-(223, 108, NULL, NULL, '蛋糕', 'https://example.com/ht/cake1.jpg', 2, 36.00, NOW()),
-(224, 108, NULL, NULL, '鸡柳', 'https://example.com/ht/snack4.jpg', 1, 15.00, NOW()),
+(222, '珍珠奶茶', 108, 136, NULL, 2, 44.00),
+(223, '蛋糕', 108, NULL, NULL, 2, 36.00),
+(224, '鸡柳', 108, NULL, NULL, 1, 15.00),
 -- 订单9明细
-(225, 109, 132, NULL, '芝芝莓莓', 'https://example.com/ht/milktea1.jpg', 1, 28.00, NOW()),
-(226, 109, 134, NULL, '满杯水果茶', 'https://example.com/ht/fruittea1.jpg', 1, 32.00, NOW()),
-(227, 109, NULL, NULL, '鸡米花', 'https://example.com/ht/snack1.jpg', 1, 15.00, NOW()),
+(225, '芝芝莓莓', 109, 132, NULL, 1, 28.00),
+(226, '满杯水果茶', 109, 134, NULL, 1, 32.00),
+(227, '鸡米花', 109, NULL, NULL, 1, 15.00),
 -- 订单10明细
-(228, 110, 133, NULL, '多肉葡萄', 'https://example.com/ht/milktea2.jpg', 2, 56.00, NOW()),
-(229, 110, NULL, NULL, '鸡翅', 'https://example.com/ht/snack3.jpg', 2, 36.00, NOW());
+(228, '多肉葡萄', 110, 133, NULL, 2, 56.00),
+(229, '鸡翅', 110, NULL, NULL, 2, 36.00);
 
--- ============================================
--- 4. 为喜茶（店铺ID:5）添加购物车数据
--- ============================================
-INSERT INTO `shopping_cart` (`id`, `user_id`, `store_id`, `dish_id`, `setmeal_id`, `dish_flavor`, `number`, `amount`, `create_time`) VALUES
-(301, 1, 5, 132, NULL, NULL, 2, 56.00, NOW()),
-(302, 1, 5, 133, NULL, NULL, 1, 28.00, NOW()),
-(303, 2, 5, 134, NULL, NULL, 1, 32.00, NOW()),
-(304, 2, 5, NULL, NULL, NULL, 1, 15.00, NOW()),
-(305, 3, 5, 135, NULL, NULL, 2, 56.00, NOW()),
-(306, 3, 5, NULL, NULL, NULL, 2, 24.00, NOW());
+
+
+
+
+
+INSERT INTO `shopping_cart` (`id`, `user_id`, `name`, `image`, `dish_id`, `setmeal_id`, `dish_flavor`, `number`, `amount`, `create_time`) VALUES
+-- 用户1的购物车
+(301, 1, '芝芝莓莓', 'https://example.com/ht/milktea1.jpg', 132, NULL, NULL, 2, 56.00, NOW()),
+(302, 1, '多肉葡萄', 'https://example.com/ht/milktea2.jpg', 133, NULL, NULL, 1, 28.00, NOW()),
+
+-- 用户2的购物车
+(303, 2, '满杯水果茶', 'https://example.com/ht/fruittea1.jpg', 134, NULL, NULL, 1, 32.00, NOW()),
+(304, 2, '鸡米花', 'https://example.com/ht/snack1.jpg', NULL, NULL, NULL, 1, 15.00, NOW()),
+
+-- 用户3的购物车
+(305, 3, '满杯红柚茶', 'https://example.com/ht/fruittea2.jpg', 135, NULL, NULL, 2, 56.00, NOW()),
+(306, 3, '薯条', 'https://example.com/ht/snack2.jpg', NULL, NULL, NULL, 2, 24.00, NOW());
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
 -- 数据插入完成
 -- ============================================
-SELECT 'shop_admin5测试数据插入完成！' AS message;
 
--- 验证数据插入结果
-SELECT 
-    (SELECT COUNT(*) FROM dish WHERE store_id = 5) AS dish_count,
-    (SELECT COUNT(*) FROM setmeal WHERE store_id = 5) AS setmeal_count,
-    (SELECT COUNT(*) FROM orders WHERE store_id = 5) AS order_count,
-    (SELECT COUNT(*) FROM order_detail WHERE order_id IN (SELECT id FROM orders WHERE store_id = 5)) AS order_detail_count,
-    (SELECT COUNT(*) FROM shopping_cart WHERE store_id = 5) AS cart_count;
