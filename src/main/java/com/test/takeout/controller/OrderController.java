@@ -129,6 +129,18 @@ public class OrderController {
         // 执行查询
         ordersService.page(pageInfo, queryWrapper);
 
+        // 为每个订单查询对应的订单详情（菜品信息）
+        List<Orders> ordersList = pageInfo.getRecords();
+        for (Orders order : ordersList) {
+            // 查询该订单的所有订单详情
+            LambdaQueryWrapper<OrderDetail> detailQueryWrapper = new LambdaQueryWrapper<>();
+            detailQueryWrapper.eq(OrderDetail::getOrderId, order.getId());
+            List<OrderDetail> orderDetails = orderDetailService.list(detailQueryWrapper);
+            
+            // 将订单详情设置到订单对象中
+            order.setOrderDetails(orderDetails);
+        }
+
         return R.success(pageInfo);
     }
 
@@ -147,6 +159,17 @@ public class OrderController {
         queryWrapper.orderByDesc(Orders::getCreateTime);
 
         List<Orders> list = ordersService.list(queryWrapper);
+
+        // 为每个订单查询对应的订单详情（菜品信息）
+        for (Orders order : list) {
+            // 查询该订单的所有订单详情
+            LambdaQueryWrapper<OrderDetail> detailQueryWrapper = new LambdaQueryWrapper<>();
+            detailQueryWrapper.eq(OrderDetail::getOrderId, order.getId());
+            List<OrderDetail> orderDetails = orderDetailService.list(detailQueryWrapper);
+            
+            // 将订单详情设置到订单对象中
+            order.setOrderDetails(orderDetails);
+        }
 
         return R.success(list);
     }
@@ -171,6 +194,18 @@ public class OrderController {
         queryWrapper.orderByDesc(Orders::getCreateTime);
 
         ordersService.page(pageInfo, queryWrapper);
+
+        // 为每个订单查询对应的订单详情（菜品信息）
+        List<Orders> ordersList = pageInfo.getRecords();
+        for (Orders order : ordersList) {
+            // 查询该订单的所有订单详情
+            LambdaQueryWrapper<OrderDetail> detailQueryWrapper = new LambdaQueryWrapper<>();
+            detailQueryWrapper.eq(OrderDetail::getOrderId, order.getId());
+            List<OrderDetail> orderDetails = orderDetailService.list(detailQueryWrapper);
+            
+            // 将订单详情设置到订单对象中
+            order.setOrderDetails(orderDetails);
+        }
 
         return R.success(pageInfo);
     }
