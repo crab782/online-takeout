@@ -113,29 +113,13 @@ public class OrderController {
         
         // 根据订单状态过滤
         if (status != null && !status.isEmpty()) {
-            // 处理状态字符串，转换为对应的状态码
-            switch (status) {
-                case "pending":
-                    queryWrapper.eq(Orders::getStatus, 0);
-                    break;
-                case "accepted":
-                    queryWrapper.eq(Orders::getStatus, 1);
-                    break;
-                case "preparing":
-                    queryWrapper.eq(Orders::getStatus, 2);
-                    break;
-                case "rider_accepted":
-                    queryWrapper.eq(Orders::getStatus, 3);
-                    break;
-                case "delivering":
-                    queryWrapper.eq(Orders::getStatus, 4);
-                    break;
-                case "completed":
-                    queryWrapper.eq(Orders::getStatus, 5);
-                    break;
-                case "cancelled":
-                    queryWrapper.eq(Orders::getStatus, 6);
-                    break;
+            // 处理状态字符串，支持多个状态（逗号分隔）
+            String[] statusArray = status.split(",");
+            if (statusArray.length > 0) {
+                queryWrapper.in(Orders::getStatus, java.util.Arrays.stream(statusArray)
+                    .map(this::getStatusFromString)
+                    .filter(java.util.Objects::nonNull)
+                    .collect(java.util.stream.Collectors.toList()));
             }
         }
         
@@ -303,19 +287,117 @@ public class OrderController {
             return R.error("订单不存在");
         }
 
-        String statusText = getStatusText(orders.getStatus());
+        // 处理状态转换（支持字符串状态和数字状态）
+        Integer status = orders.getStatus();
+        if (status == null) {
+            // 尝试从请求体中获取字符串状态
+            try {
+                // 从请求体中获取原始数据
+                String requestBody = request.getReader().lines().collect(java.util.stream.Collectors.joining(System.lineSeparator()));
+                com.fasterxml.jackson.databind.JsonNode jsonNode = new com.fasterxml.jackson.databind.ObjectMapper().readTree(requestBody);
+                if (jsonNode.has("status")) {
+                    String statusStr = jsonNode.get("status").asText();
+                    // 转换字符串状态为数字状态
+                    status = convertStatusStringToInt(statusStr);
+                    if (status == null) {
+                        log.error("无效的订单状态：{}", statusStr);
+                        return R.error("无效的订单状态");
+                    }
+                    orders.setStatus(status);
+                }
+            } catch (Exception e) {
+                log.error("解析状态失败：{}", e.getMessage());
+                return R.error("解析状态失败");
+            }
+        }
+
+        String statusText = getStatusText(status);
         log.info("订单状态变更：订单ID={}，订单号={}，原状态={}，新状态={}（{}）", 
-                orders.getId(), oldOrder.getNumber(), oldOrder.getStatus(), orders.getStatus(), statusText);
+                orders.getId(), oldOrder.getNumber(), oldOrder.getStatus(), status, statusText);
 
         boolean success = ordersService.updateById(orders);
         if (success) {
             log.info("订单状态更新成功：订单ID={}，订单号={}，新状态={}（{}）", 
-                    orders.getId(), oldOrder.getNumber(), orders.getStatus(), statusText);
+                    orders.getId(), oldOrder.getNumber(), status, statusText);
             return R.success("修改订单状态成功");
         } else {
             log.error("订单状态更新失败：订单ID={}，订单号={}，目标状态={}（{}）", 
-                    orders.getId(), oldOrder.getNumber(), orders.getStatus(), statusText);
+                    orders.getId(), oldOrder.getNumber(), status, statusText);
             return R.error("修改订单状态失败");
+        }
+    }
+
+    /**
+     * 将字符串状态转换为数字状态码
+     * @param statusStr 字符串状态
+     * @return 数字状态码
+     */
+    private Integer convertStatusStringToInt(String statusStr) {
+        if (statusStr == null) {
+            return null;
+        }
+        switch (statusStr) {
+            case "pending":
+                return 0;
+            case "pay_success":
+                return 1;
+            case "accepted":
+                return 2;
+            case "preparing":
+                return 3;
+            case "rider_accepted":
+                return 4;
+            case "delivering":
+                return 5;
+            case "completed":
+                return 5;
+            case "cancelled":
+                return 6;
+            default:
+                // 尝试直接转换为数字
+                try {
+                    return Integer.parseInt(statusStr);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+        }
+    }
+
+    /**
+     * 将字符串状态转换为数字状态码（用于状态过滤）
+     * @param statusStr 字符串状态
+     * @return 数字状态码
+     */
+    private Integer getStatusFromString(String statusStr) {
+        if (statusStr == null) {
+            return null;
+        }
+        switch (statusStr) {
+            case "pending":
+                return 0;
+            case "pay_success":
+                return 1;
+            case "accepted":
+                return 2;
+            case "preparing":
+                return 3;
+            case "rider_accepted":
+                return 4;
+            case "delivering":
+                return 4;
+            case "delivered":
+                return 4;
+            case "completed":
+                return 5;
+            case "cancelled":
+                return 6;
+            default:
+                // 尝试直接转换为数字
+                try {
+                    return Integer.parseInt(statusStr);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
         }
     }
 
