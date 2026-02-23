@@ -32,6 +32,10 @@ public class Setmeal implements Serializable {
 
     private String image;
 
+    private Long storeId;
+
+    private String storeName;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
@@ -41,6 +45,4 @@ public class Setmeal implements Serializable {
     private Long createUser;
 
     private Long updateUser;
-
-    private Long storeId;
 }

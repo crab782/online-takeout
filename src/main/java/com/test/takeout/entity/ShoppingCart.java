@@ -26,6 +26,10 @@ public class ShoppingCart implements Serializable {
 
     private Long userId;
 
+    private Long storeId;
+
+    private String storeName;
+
     private Long dishId;
 
     private Long setmealId;

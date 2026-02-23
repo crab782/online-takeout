@@ -13,7 +13,13 @@ public class OrdersSubmitDTO implements Serializable {
 
     private Long addressBookId;
 
+    private Long storeId;
+
+    private String storeName;
+
     private BigDecimal amount;
+
+    private Integer totalQuantity;
 
     private List<OrderDetailDTO> orderDetails;
 
@@ -22,6 +28,14 @@ public class OrdersSubmitDTO implements Serializable {
 
         private static final long serialVersionUID = 1L;
 
+        private Long id;
+
+        private String name;
+
+        private String description;
+
+        private BigDecimal price;
+
         private Long dishId;
 
         private Long setmealId;
@@ -29,5 +43,7 @@ public class OrdersSubmitDTO implements Serializable {
         private Integer number;
 
         private BigDecimal amount;
+
+        private String image;
     }
 }

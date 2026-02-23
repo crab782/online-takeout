@@ -15,7 +15,6 @@ import com.test.takeout.service.ShoppingCartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-//import javax.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -499,30 +498,20 @@ public class OrderController {
         long completedOrders = todayOrders.stream().filter(order -> order.getStatus() == 1).count();
         stats.put("completedOrders", completedOrders);
 
-        // 已取消订单数（状态为2）
-        long cancelledOrders = todayOrders.stream().filter(order -> order.getStatus() == 2).count();
-        stats.put("cancelledOrders", cancelledOrders);
-
-        // 已支付订单数（支付状态为1）
-        long paidOrders = todayOrders.stream().filter(order -> order.getPayStatus() == 1).count();
-        stats.put("paidOrders", paidOrders);
-
-        // 未支付订单数（支付状态为0）
-        long unpaidOrders = todayOrders.stream().filter(order -> order.getPayStatus() == 0).count();
-        stats.put("unpaidOrders", unpaidOrders);
-
-        // 总金额（已支付的订单）
-        BigDecimal totalAmount = todayOrders.stream()
-                .filter(order -> order.getPayStatus() == 1)
-                .map(Orders::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 计算总销售额
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (Orders order : todayOrders) {
+            if (order.getAmount() != null) {
+                totalAmount = totalAmount.add(order.getAmount());
+            }
+        }
         stats.put("totalAmount", totalAmount);
 
         return R.success(stats);
     }
 
     /**
-     * 再来一单（基于历史订单重新下单）
+     * 再来一单
      * @param orders 订单信息（必须包含订单ID）
      * @return 操作结果
      */
@@ -530,107 +519,34 @@ public class OrderController {
     public R<String> again(@RequestBody Orders orders) {
         log.info("再来一单：orders={}", orders);
 
-        Long userId = (Long) request.getAttribute("userId");
-
-        Orders originalOrder = ordersService.getById(orders.getId());
-        if (originalOrder == null) {
-            return R.error("原订单不存在");
-        }
-
-        LambdaQueryWrapper<OrderDetail> detailQueryWrapper = new LambdaQueryWrapper<>();
-        detailQueryWrapper.eq(OrderDetail::getOrderId, orders.getId());
-        List<OrderDetail> orderDetails = orderDetailService.list(detailQueryWrapper);
-
-        if (orderDetails == null || orderDetails.isEmpty()) {
-            return R.error("订单明细不存在");
-        }
-
-        for (OrderDetail orderDetail : orderDetails) {
-            ShoppingCart shoppingCart = new ShoppingCart();
-            shoppingCart.setUserId(userId);
-            shoppingCart.setDishId(orderDetail.getDishId());
-            shoppingCart.setSetmealId(orderDetail.getSetmealId());
-            shoppingCart.setNumber(orderDetail.getNumber());
-            shoppingCart.setAmount(orderDetail.getAmount());
-            shoppingCart.setCreateTime(LocalDateTime.now());
-
-            LambdaQueryWrapper<ShoppingCart> cartQueryWrapper = new LambdaQueryWrapper<>();
-            cartQueryWrapper.eq(ShoppingCart::getUserId, userId);
-            if (orderDetail.getDishId() != null) {
-                cartQueryWrapper.eq(ShoppingCart::getDishId, orderDetail.getDishId());
-            } else if (orderDetail.getSetmealId() != null) {
-                cartQueryWrapper.eq(ShoppingCart::getSetmealId, orderDetail.getSetmealId());
-            }
-
-            ShoppingCart existingCart = shoppingCartService.getOne(cartQueryWrapper);
-            if (existingCart != null) {
-                existingCart.setNumber(existingCart.getNumber() + orderDetail.getNumber());
-                shoppingCartService.updateById(existingCart);
-            } else {
-                shoppingCartService.save(shoppingCart);
-            }
-        }
-
-        return R.success("已将订单商品添加到购物车");
-    }
-
-    /**
-     * 查询订单详情
-     * @param id 订单ID
-     * @return 订单详情（包含订单明细）
-     */
-    @GetMapping("/detail")
-    public R<Map<String, Object>> detail(@RequestParam("id") Long id) {
-        log.info("查询订单详情：id={}", id);
-
-        if (id == null) {
-            return R.error("订单ID不能为空");
-        }
-
-        Orders order = ordersService.getById(id);
-        if (order == null) {
-            return R.error("订单不存在");
-        }
-
-        LambdaQueryWrapper<OrderDetail> detailQueryWrapper = new LambdaQueryWrapper<>();
-        detailQueryWrapper.eq(OrderDetail::getOrderId, id);
-        List<OrderDetail> orderDetails = orderDetailService.list(detailQueryWrapper);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("order", order);
-        result.put("orderDetails", orderDetails);
-
-        return R.success(result);
-    }
-
-    /**
-     * 支付订单
-     * @param orders 订单信息（必须包含订单ID和支付方式）
-     * @return 操作结果
-     */
-    @PostMapping("/pay")
-    public R<String> pay(@RequestBody Orders orders) {
-        log.info("支付订单：orders={}", orders);
-
         if (orders.getId() == null) {
             return R.error("订单ID不能为空");
         }
-        if (orders.getPayMethod() == null) {
-            return R.error("支付方式不能为空");
+
+        // 查询原订单
+        Orders oldOrder = ordersService.getById(orders.getId());
+        if (oldOrder == null) {
+            return R.error("订单不存在");
         }
 
-        Orders payOrder = new Orders();
-        payOrder.setId(orders.getId());
-        payOrder.setPayMethod(orders.getPayMethod());
-        payOrder.setPayStatus(1);
-        payOrder.setUpdateTime(LocalDateTime.now());
+        // 查询原订单的订单详情
+        LambdaQueryWrapper<OrderDetail> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderDetail::getOrderId, orders.getId());
+        List<OrderDetail> orderDetails = orderDetailService.list(queryWrapper);
 
-        boolean success = ordersService.updateById(payOrder);
-        if (success) {
-            return R.success("支付成功");
-        } else {
-            return R.error("支付失败");
+        // 将原订单的菜品添加到购物车
+        Long userId = (Long) request.getAttribute("userId");
+        for (OrderDetail detail : orderDetails) {
+            ShoppingCart shoppingCart = new ShoppingCart();
+            shoppingCart.setUserId(userId);
+            shoppingCart.setDishId(detail.getDishId());
+            shoppingCart.setSetmealId(detail.getSetmealId());
+            shoppingCart.setNumber(detail.getNumber());
+            shoppingCart.setAmount(detail.getAmount());
+            shoppingCartService.save(shoppingCart);
         }
+
+        return R.success("再来一单成功");
     }
 
     /**
@@ -651,6 +567,8 @@ public class OrderController {
 
         Orders orders = new Orders();
         orders.setUserId(userId);
+        orders.setStoreId(ordersSubmitDTO.getStoreId());
+        orders.setStoreName(ordersSubmitDTO.getStoreName());
         orders.setAmount(ordersSubmitDTO.getAmount());
         orders.setReceiver(addressBook.getConsignee());
         orders.setAddress(addressBook.getDetail());
@@ -662,7 +580,8 @@ public class OrderController {
 
         ordersService.save(orders);
 
-        log.info("订单创建成功，订单ID：{}，订单号：{}，状态：1（商家已接单）", orders.getId(), orders.getNumber());
+        log.info("订单创建成功，订单ID：{}，订单号：{}，店铺ID：{}，店铺名称：{}，状态：1（商家已接单）", 
+                orders.getId(), orders.getNumber(), ordersSubmitDTO.getStoreId(), ordersSubmitDTO.getStoreName());
 
         List<OrdersSubmitDTO.OrderDetailDTO> orderDetails = ordersSubmitDTO.getOrderDetails();
         if (orderDetails != null && !orderDetails.isEmpty()) {
@@ -671,15 +590,20 @@ public class OrderController {
                 orderDetail.setOrderId(orders.getId());
                 orderDetail.setDishId(detailDTO.getDishId());
                 orderDetail.setSetmealId(detailDTO.getSetmealId());
+                orderDetail.setName(detailDTO.getName());
                 orderDetail.setNumber(detailDTO.getNumber());
                 orderDetail.setAmount(detailDTO.getAmount());
+                orderDetail.setImage(detailDTO.getImage());
                 orderDetailService.save(orderDetail);
             }
         }
 
-        shoppingCartService.remove(new LambdaQueryWrapper<ShoppingCart>().eq(ShoppingCart::getUserId, userId));
+        // 只清空该店铺的购物车商品
+        LambdaQueryWrapper<ShoppingCart> cartQueryWrapper = new LambdaQueryWrapper<>();
+        cartQueryWrapper.eq(ShoppingCart::getUserId, userId);
+        cartQueryWrapper.eq(ShoppingCart::getStoreId, ordersSubmitDTO.getStoreId());
+        shoppingCartService.remove(cartQueryWrapper);
 
         return R.success(orders);
     }
-
 }

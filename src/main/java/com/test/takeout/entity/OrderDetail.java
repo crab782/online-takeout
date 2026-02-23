@@ -26,4 +26,6 @@ public class OrderDetail implements Serializable {
     private Integer number;
 
     private BigDecimal amount;
+
+    private String image;
 }

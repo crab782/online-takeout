@@ -5,9 +5,11 @@ import com.test.takeout.common.R;
 import com.test.takeout.entity.Dish;
 import com.test.takeout.entity.Setmeal;
 import com.test.takeout.entity.ShoppingCart;
+import com.test.takeout.entity.Store;
 import com.test.takeout.service.DishService;
 import com.test.takeout.service.SetmealService;
 import com.test.takeout.service.ShoppingCartService;
+import com.test.takeout.service.StoreService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +31,13 @@ public class ShoppingCartController {
     @Autowired
     private SetmealService setmealService;
 
+    @Autowired
+    private StoreService storeService;
+
     /**
-     * 查询购物车商品列表
+     * 查询购物车商品列表（按店铺分组）
      * @param request 请求对象
-     * @return 购物车商品列表
+     * @return 购物车商品列表（按店铺分组）
      */
     @GetMapping("/list")
     public R<List<ShoppingCart>> list(HttpServletRequest request) {
@@ -45,9 +50,19 @@ public class ShoppingCartController {
 
         LambdaQueryWrapper<ShoppingCart> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ShoppingCart::getUserId, userId);
-        queryWrapper.orderByAsc(ShoppingCart::getCreateTime);
+        queryWrapper.orderByAsc(ShoppingCart::getStoreId, ShoppingCart::getCreateTime);
 
         List<ShoppingCart> list = shoppingCartService.list(queryWrapper);
+
+        // 填充店铺名称
+        for (ShoppingCart item : list) {
+            if (item.getStoreId() != null && item.getStoreName() == null) {
+                Store store = storeService.getById(item.getStoreId());
+                if (store != null) {
+                    item.setStoreName(store.getName());
+                }
+            }
+        }
 
         return R.success(list);
     }
@@ -70,6 +85,7 @@ public class ShoppingCartController {
 
         Long dishId = shoppingCart.getDishId();
         Long setmealId = shoppingCart.getSetmealId();
+        Long storeId = shoppingCart.getStoreId();
 
         LambdaQueryWrapper<ShoppingCart> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ShoppingCart::getUserId, userId);
@@ -95,11 +111,15 @@ public class ShoppingCartController {
                 shoppingCart.setName(dish.getName());
                 shoppingCart.setImage(dish.getImage());
                 shoppingCart.setAmount(dish.getPrice());
+                shoppingCart.setStoreId(dish.getStoreId());
+                shoppingCart.setStoreName(dish.getStoreName());
             } else if (setmealId != null) {
                 Setmeal setmeal = setmealService.getById(setmealId);
                 shoppingCart.setName(setmeal.getName());
                 shoppingCart.setImage(setmeal.getImage());
                 shoppingCart.setAmount(setmeal.getPrice());
+                shoppingCart.setStoreId(setmeal.getStoreId());
+                shoppingCart.setStoreName(setmeal.getStoreName());
             }
             shoppingCart.setNumber(shoppingCart.getNumber());
             shoppingCartService.save(shoppingCart);

@@ -35,6 +35,16 @@ public class Dish implements Serializable {
     private Long categoryId;
 
     /**
+     * 店铺ID
+     */
+    private Long storeId;
+
+    /**
+     * 店铺名称
+     */
+    private String storeName;
+
+    /**
      * 价格
      */
     private BigDecimal price;
