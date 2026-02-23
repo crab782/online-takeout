@@ -31,6 +31,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/user/password") // 拦截修改密码接口
                 .addPathPatterns("/user/update") // 拦截更新用户信息接口
                 .addPathPatterns("/backend/**") // 拦截后端管理相关接口
+                .addPathPatterns("/platform/**") // 拦截平台管理相关接口
                 .excludePathPatterns("/user/login") // 排除登录接口
                 .excludePathPatterns("/user/register") // 排除注册接口
                 .excludePathPatterns("/user/code") // 排除获取验证码接口
@@ -41,7 +42,9 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/backend/user/info") // 排除后端用户信息接口
                 .excludePathPatterns("/backend/user/logout") // 排除后端用户登出接口
                 .excludePathPatterns("/backend/dashboard/**") // 排除后端仪表盘相关接口
-                .excludePathPatterns("/order/page"); // 排除订单分页查询接口
+                .excludePathPatterns("/order/page") // 排除订单分页查询接口
+                .excludePathPatterns("/platform/login") // 排除平台登录接口
+                .excludePathPatterns("/platform/logout"); // 排除平台登出接口
     }
 
 }
