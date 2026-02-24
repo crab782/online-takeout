@@ -68,12 +68,15 @@ public class DashboardController {
 
         // 执行查询
         List<Orders> pendingOrders = ordersService.list(queryWrapper);
+        log.info("待处理订单数量: {}", pendingOrders.size());
+        log.info("待处理订单: {}", pendingOrders);
 
         // 构建响应数据
         Map<String, Object> data = new HashMap<>();
         data.put("list", pendingOrders);
         data.put("total", pendingOrders.size());
 
+        log.info("响应数据: {}", data);
         return R.success(data);
     }
 

@@ -403,7 +403,7 @@ public class OrderController {
             case "rider_accepted":
                 return 4;
             case "delivering":
-                return 3;
+                return 5;
             case "completed":
                 return 5;
             case "cancelled":
@@ -600,7 +600,7 @@ public class OrderController {
             orders.setReceiver(addressBook.getConsignee());
             orders.setAddress(addressBook.getDetail());
             orders.setPhone(addressBook.getPhone());
-            orders.setStatus(1);
+            orders.setStatus(0);
             orders.setPayStatus(0);
             orders.setCreateTime(LocalDateTime.now());
             orders.setUpdateTime(LocalDateTime.now());
@@ -611,7 +611,7 @@ public class OrderController {
 
             ordersService.save(orders);
 
-            log.info("订单创建成功，订单ID：{}，订单号：{}，店铺ID：{}，店铺名称：{}，状态：1（商家已接单）", 
+            log.info("订单创建成功，订单ID：{}，订单号：{}，店铺ID：{}，店铺名称：{}，状态：0（待付款）", 
                     orders.getId(), orders.getNumber(), ordersSubmitDTO.getStoreId(), ordersSubmitDTO.getStoreName());
 
             List<OrdersSubmitDTO.OrderDetailDTO> orderDetails = ordersSubmitDTO.getOrderDetails();
@@ -652,11 +652,33 @@ public class OrderController {
         log.info("支付订单：paymentInfo={}", paymentInfo);
 
         try {
-            Long orderId = ((Number) paymentInfo.get("id")).longValue();
-            String paymentMethod = (String) paymentInfo.get("paymentMethod");
+            if (paymentInfo == null) {
+                return R.error("支付信息不能为空");
+            }
+
+            Object idObj = paymentInfo.get("id");
+            if (idObj == null) {
+                return R.error("订单ID不能为空");
+            }
+
+            Long orderId = null;
+            if (idObj instanceof Number) {
+                orderId = ((Number) idObj).longValue();
+            } else if (idObj instanceof String) {
+                try {
+                    orderId = Long.parseLong((String) idObj);
+                } catch (NumberFormatException e) {
+                    return R.error("订单ID格式错误");
+                }
+            }
 
             if (orderId == null) {
                 return R.error("订单ID不能为空");
+            }
+
+            String paymentMethod = (String) paymentInfo.get("paymentMethod");
+            if (paymentMethod == null) {
+                paymentMethod = "alipay"; // 默认支付宝
             }
 
             // 查询订单
