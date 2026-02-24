@@ -63,6 +63,12 @@ public class DashboardController {
         queryWrapper.eq(Orders::getStatus, 2); // 2表示商家已接单
         if (storeId != null) {
             queryWrapper.eq(Orders::getStoreId, storeId);
+        } else {
+            // 如果storeId为null，返回空列表
+            Map<String, Object> data = new HashMap<>();
+            data.put("list", new ArrayList<>());
+            data.put("total", 0);
+            return R.success(data);
         }
         queryWrapper.orderByDesc(Orders::getCreateTime);
 
