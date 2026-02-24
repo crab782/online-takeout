@@ -61,7 +61,8 @@ public class PlatformController {
             return R.error("用户名不存在");
         }
 
-        if (!employee.getPassword().equals(password)) {
+        // 验证密码（使用BCrypt进行密码验证）
+        if (!org.springframework.security.crypto.bcrypt.BCrypt.checkpw(password, employee.getPassword())) {
             return R.error("密码错误");
         }
 
