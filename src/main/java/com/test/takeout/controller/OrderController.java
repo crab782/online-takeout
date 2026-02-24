@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.test.takeout.common.R;
 import com.test.takeout.dto.OrdersSubmitDTO;
+import com.test.takeout.dto.OrderStatusUpdateDTO;
+import java.util.Map;
 import com.test.takeout.entity.AddressBook;
 import com.test.takeout.entity.OrderDetail;
 import com.test.takeout.entity.Orders;
@@ -308,56 +310,75 @@ public class OrderController {
 
     /**
      * 修改订单状态（取消/派送/完成）
-     * @param orders 订单信息
+     * @param requestBody 请求体
      * @return 操作结果
      */
     @PutMapping
-    public R<String> update(@RequestBody Orders orders) {
-        log.info("修改订单状态：orders={}", orders);
+    public R<String> update(@RequestBody Map<String, Object> requestBody) {
+        log.info("修改订单状态：requestBody={}", requestBody);
 
-        Orders oldOrder = ordersService.getById(orders.getId());
-        if (oldOrder == null) {
-            log.error("订单不存在，订单ID：{}", orders.getId());
-            return R.error("订单不存在");
-        }
+        try {
+            // 获取订单ID
+            Long orderId = ((Number) requestBody.get("id")).longValue();
+            if (orderId == null) {
+                log.error("订单ID不能为空");
+                return R.error("订单ID不能为空");
+            }
 
-        // 处理状态转换（支持字符串状态和数字状态）
-        Integer status = orders.getStatus();
-        if (status == null) {
-            // 尝试从请求体中获取字符串状态
-            try {
-                // 从请求体中获取原始数据
-                String requestBody = request.getReader().lines().collect(java.util.stream.Collectors.joining(System.lineSeparator()));
-                com.fasterxml.jackson.databind.JsonNode jsonNode = new com.fasterxml.jackson.databind.ObjectMapper().readTree(requestBody);
-                if (jsonNode.has("status")) {
-                    String statusStr = jsonNode.get("status").asText();
-                    // 转换字符串状态为数字状态
+            // 查询订单
+            Orders oldOrder = ordersService.getById(orderId);
+            if (oldOrder == null) {
+                log.error("订单不存在，订单ID：{}", orderId);
+                return R.error("订单不存在");
+            }
+
+            // 获取状态
+            Object statusObj = requestBody.get("status");
+            Integer status = null;
+
+            if (statusObj != null) {
+                if (statusObj instanceof Integer) {
+                    // 数字状态
+                    status = (Integer) statusObj;
+                } else if (statusObj instanceof String) {
+                    // 字符串状态
+                    String statusStr = (String) statusObj;
                     status = convertStatusStringToInt(statusStr);
                     if (status == null) {
                         log.error("无效的订单状态：{}", statusStr);
                         return R.error("无效的订单状态");
                     }
-                    orders.setStatus(status);
                 }
-            } catch (Exception e) {
-                log.error("解析状态失败：{}", e.getMessage());
-                return R.error("解析状态失败");
             }
-        }
 
-        String statusText = getStatusText(status);
-        log.info("订单状态变更：订单ID={}，订单号={}，原状态={}，新状态={}（{}）", 
-                orders.getId(), oldOrder.getNumber(), oldOrder.getStatus(), status, statusText);
+            if (status == null) {
+                log.error("订单状态不能为空");
+                return R.error("订单状态不能为空");
+            }
 
-        boolean success = ordersService.updateById(orders);
-        if (success) {
-            log.info("订单状态更新成功：订单ID={}，订单号={}，新状态={}（{}）", 
-                    orders.getId(), oldOrder.getNumber(), status, statusText);
-            return R.success("修改订单状态成功");
-        } else {
-            log.error("订单状态更新失败：订单ID={}，订单号={}，目标状态={}（{}）", 
-                    orders.getId(), oldOrder.getNumber(), status, statusText);
-            return R.error("修改订单状态失败");
+            String statusText = getStatusText(status);
+            log.info("订单状态变更：订单ID={}，订单号={}，原状态={}，新状态={}（{}）", 
+                    orderId, oldOrder.getNumber(), oldOrder.getStatus(), status, statusText);
+
+            // 创建更新对象
+            Orders updateOrder = new Orders();
+            updateOrder.setId(orderId);
+            updateOrder.setStatus(status);
+            updateOrder.setUpdateTime(LocalDateTime.now());
+
+            boolean success = ordersService.updateById(updateOrder);
+            if (success) {
+                log.info("订单状态更新成功：订单ID={}，订单号={}，新状态={}（{}）", 
+                        orderId, oldOrder.getNumber(), status, statusText);
+                return R.success("修改订单状态成功");
+            } else {
+                log.error("订单状态更新失败：订单ID={}，订单号={}，目标状态={}（{}）", 
+                        orderId, oldOrder.getNumber(), status, statusText);
+                return R.error("修改订单状态失败");
+            }
+        } catch (Exception e) {
+            log.error("修改订单状态失败：{}", e.getMessage(), e);
+            return R.error("系统内部错误");
         }
     }
 
@@ -382,7 +403,7 @@ public class OrderController {
             case "rider_accepted":
                 return 4;
             case "delivering":
-                return 5;
+                return 3;
             case "completed":
                 return 5;
             case "cancelled":
@@ -644,12 +665,13 @@ public class OrderController {
                 return R.error("订单不存在");
             }
 
-            // 更新订单支付状态
+            // 更新订单支付状态和订单状态
             Orders updateOrder = new Orders();
             updateOrder.setId(orderId);
             updateOrder.setPayStatus(1); // 支付成功
             updateOrder.setPayMethod(paymentMethod.equals("alipay") ? 1 : 2); // 1:支付宝，2:微信
             updateOrder.setPayTime(LocalDateTime.now());
+            updateOrder.setStatus(2); // 自动接单，状态变为商家接单
             updateOrder.setUpdateTime(LocalDateTime.now());
 
             boolean success = ordersService.updateById(updateOrder);
@@ -665,5 +687,30 @@ public class OrderController {
             log.error("支付订单失败：", e);
             return R.error("系统内部错误：" + e.getMessage());
         }
+    }
+
+    /**
+     * 查询订单详情
+     * @param id 订单ID
+     * @return 订单详情
+     */
+    @GetMapping("/detail")
+    public R<Orders> detail(@RequestParam Long id) {
+        log.info("查询订单详情：id={}", id);
+
+        Orders orders = ordersService.getById(id);
+        if (orders == null) {
+            return R.error("订单不存在");
+        }
+
+        // 查询该订单的所有订单详情（商品信息）
+        LambdaQueryWrapper<OrderDetail> detailQueryWrapper = new LambdaQueryWrapper<>();
+        detailQueryWrapper.eq(OrderDetail::getOrderId, id);
+        List<OrderDetail> orderDetails = orderDetailService.list(detailQueryWrapper);
+
+        // 将订单详情设置到订单对象中
+        orders.setOrderDetails(orderDetails);
+
+        return R.success(orders);
     }
 }

@@ -36,14 +36,18 @@ public class CategoryController {
      * 分页查询分类列表
      * @param page 页码
      * @param pageSize 每页大小
+     * @param storeId 店铺ID
      * @return 分类列表
      */
     @GetMapping("/page")
-    public R<Page<Category>> page(int page, int pageSize) {
-        log.info("分页查询分类列表：page={}, pageSize={}", page, pageSize);
+    public R<Page<Category>> page(int page, int pageSize, @RequestParam(value = "storeId", required = false) Long storeId) {
+        log.info("分页查询分类列表：page={}, pageSize={}, storeId={}", page, pageSize, storeId);
 
-        // 获取当前登录用户的店铺ID
-        Long storeId = (Long) request.getAttribute("storeId");
+        // 尝试从请求属性中获取店铺ID（登录用户）
+        if (storeId == null) {
+            storeId = (Long) request.getAttribute("storeId");
+        }
+
         if (storeId == null) {
             return R.error("请先登录");
         }
