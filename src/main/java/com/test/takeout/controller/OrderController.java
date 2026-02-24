@@ -692,7 +692,6 @@ public class OrderController {
             updateOrder.setId(orderId);
             updateOrder.setPayStatus(1); // 支付成功
             updateOrder.setPayMethod(paymentMethod.equals("alipay") ? 1 : 2); // 1:支付宝，2:微信
-            updateOrder.setPayTime(LocalDateTime.now());
             updateOrder.setStatus(2); // 自动接单，状态变为商家接单
             updateOrder.setUpdateTime(LocalDateTime.now());
 
