@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,36 +41,41 @@ public class DashboardController {
     /**
      * 获取待处理订单
      * @param request 请求对象
+     * @param shopId 店铺ID
      * @return 待处理订单列表
      */
     @GetMapping("/pending-orders")
-    public R<Map<String, Object>> getPendingOrders(HttpServletRequest request) {
-        log.info("获取待处理订单");
-
-        // 从请求中获取用户ID
-        Long userId = (Long) request.getAttribute("userId");
-        log.info("用户ID: {}", userId);
-
-        // 查询员工信息，获取store_id
-        Employee employee = employeeService.getById(userId);
-        Long storeId = null;
-        if (employee != null) {
-            storeId = employee.getStoreId();
-            log.info("店铺ID: {}", storeId);
-        }
+    public R<Map<String, Object>> getPendingOrders(HttpServletRequest request, @RequestParam(value = "shopId", required = false) Long shopId) {
+        log.info("获取待处理订单，shopId: {}", shopId);
 
         // 构造条件构造器，查询所有待处理状态的订单
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
-        // 待处理状态包括：待付款（status=0）、支付成功（status=1）、商家接单（status=2）、配送中（status=4）
-        queryWrapper.in(Orders::getStatus, 0, 1, 2, 4);
-        if (storeId != null) {
-            queryWrapper.eq(Orders::getStoreId, storeId);
+        // 待处理状态包括：待处理（status=0）、商家已接单（status=1）、准备中（status=2）、骑手已接单（status=3）、配送中（status=4）
+        queryWrapper.in(Orders::getStatus, 0, 1, 2, 3, 4);
+        if (shopId != null) {
+            queryWrapper.eq(Orders::getStoreId, shopId);
         } else {
-            // 如果storeId为null，返回空列表
-            Map<String, Object> data = new HashMap<>();
-            data.put("list", new ArrayList<>());
-            data.put("total", 0);
-            return R.success(data);
+            // 从请求中获取用户ID
+            Long userId = (Long) request.getAttribute("userId");
+            log.info("用户ID: {}", userId);
+
+            // 查询员工信息，获取store_id
+            Employee employee = employeeService.getById(userId);
+            Long storeId = null;
+            if (employee != null) {
+                storeId = employee.getStoreId();
+                log.info("店铺ID: {}", storeId);
+            }
+
+            if (storeId != null) {
+                queryWrapper.eq(Orders::getStoreId, storeId);
+            } else {
+                // 如果storeId为null，返回空列表
+                Map<String, Object> data = new HashMap<>();
+                data.put("list", new ArrayList<>());
+                data.put("total", 0);
+                return R.success(data);
+            }
         }
         queryWrapper.orderByDesc(Orders::getCreateTime);
 
