@@ -96,22 +96,30 @@ public class DashboardController {
     /**
      * 获取当天订单统计
      * @param request 请求对象
+     * @param shopId 店铺ID
      * @return 当天订单统计数据
      */
     @GetMapping("/today-stats")
-    public R<Map<String, Object>> getTodayOrderStats(HttpServletRequest request) {
-        log.info("获取当天订单统计");
+    public R<Map<String, Object>> getTodayOrderStats(HttpServletRequest request, @RequestParam(value = "shopId", required = false) Long shopId) {
+        log.info("获取当天订单统计，shopId: {}", shopId);
 
-        // 从请求中获取用户ID
-        Long userId = (Long) request.getAttribute("userId");
-        log.info("用户ID: {}", userId);
-
-        // 查询员工信息，获取store_id
-        Employee employee = employeeService.getById(userId);
         Long storeId = null;
-        if (employee != null) {
-            storeId = employee.getStoreId();
-            log.info("店铺ID: {}", storeId);
+        if (shopId != null) {
+            storeId = shopId;
+        } else {
+            // 从请求中获取用户ID
+            Long userId = (Long) request.getAttribute("userId");
+            log.info("用户ID: {}", userId);
+
+            // 查询员工信息，获取store_id
+            Employee employee = employeeService.getById(userId);
+            if (employee != null) {
+                storeId = employee.getStoreId();
+                log.info("员工信息: {}", employee);
+                log.info("店铺ID: {}", storeId);
+            } else {
+                log.info("未找到员工信息，userId: {}", userId);
+            }
         }
 
         // 获取当天的开始时间和结束时间
@@ -155,22 +163,27 @@ public class DashboardController {
     /**
      * 获取近30日业务趋势数据
      * @param request 请求对象
+     * @param shopId 店铺ID
      * @return 近30日业务趋势数据
      */
     @GetMapping("/business-trend")
-    public R<Map<String, Object>> getBusinessTrend(HttpServletRequest request) {
-        log.info("获取近30日业务趋势数据");
+    public R<Map<String, Object>> getBusinessTrend(HttpServletRequest request, @RequestParam(value = "shopId", required = false) Long shopId) {
+        log.info("获取近30日业务趋势数据，shopId: {}", shopId);
 
-        // 从请求中获取用户ID
-        Long userId = (Long) request.getAttribute("userId");
-        log.info("用户ID: {}", userId);
-
-        // 查询员工信息，获取store_id
-        Employee employee = employeeService.getById(userId);
         Long storeId = null;
-        if (employee != null) {
-            storeId = employee.getStoreId();
-            log.info("店铺ID: {}", storeId);
+        if (shopId != null) {
+            storeId = shopId;
+        } else {
+            // 从请求中获取用户ID
+            Long userId = (Long) request.getAttribute("userId");
+            log.info("用户ID: {}", userId);
+
+            // 查询员工信息，获取store_id
+            Employee employee = employeeService.getById(userId);
+            if (employee != null) {
+                storeId = employee.getStoreId();
+                log.info("店铺ID: {}", storeId);
+            }
         }
 
         // 获取当前时间
@@ -225,22 +238,27 @@ public class DashboardController {
     /**
      * 获取用户支出数据
      * @param request 请求对象
+     * @param shopId 店铺ID
      * @return 用户支出数据
      */
     @GetMapping("/user-expenses")
-    public R<Map<String, Object>> getUserExpenses(HttpServletRequest request) {
-        log.info("获取用户支出数据");
+    public R<Map<String, Object>> getUserExpenses(HttpServletRequest request, @RequestParam(value = "shopId", required = false) Long shopId) {
+        log.info("获取用户支出数据，shopId: {}", shopId);
 
-        // 从请求中获取用户ID
-        Long userId = (Long) request.getAttribute("userId");
-        log.info("用户ID: {}", userId);
-
-        // 查询员工信息，获取store_id
-        Employee employee = employeeService.getById(userId);
         Long storeId = null;
-        if (employee != null) {
-            storeId = employee.getStoreId();
-            log.info("店铺ID: {}", storeId);
+        if (shopId != null) {
+            storeId = shopId;
+        } else {
+            // 从请求中获取用户ID
+            Long userId = (Long) request.getAttribute("userId");
+            log.info("用户ID: {}", userId);
+
+            // 查询员工信息，获取store_id
+            Employee employee = employeeService.getById(userId);
+            if (employee != null) {
+                storeId = employee.getStoreId();
+                log.info("店铺ID: {}", storeId);
+            }
         }
 
         // 查询所有订单
@@ -280,22 +298,27 @@ public class DashboardController {
     /**
      * 获取今日订单状态分布
      * @param request 请求对象
+     * @param shopId 店铺ID
      * @return 今日订单状态分布
      */
     @GetMapping("/today-order-status")
-    public R<Map<String, Object>> getTodayOrderStatus(HttpServletRequest request) {
-        log.info("获取今日订单状态分布");
+    public R<Map<String, Object>> getTodayOrderStatus(HttpServletRequest request, @RequestParam(value = "shopId", required = false) Long shopId) {
+        log.info("获取今日订单状态分布，shopId: {}", shopId);
 
-        // 从请求中获取用户ID
-        Long userId = (Long) request.getAttribute("userId");
-        log.info("用户ID: {}", userId);
-
-        // 查询员工信息，获取store_id
-        Employee employee = employeeService.getById(userId);
         Long storeId = null;
-        if (employee != null) {
-            storeId = employee.getStoreId();
-            log.info("店铺ID: {}", storeId);
+        if (shopId != null) {
+            storeId = shopId;
+        } else {
+            // 从请求中获取用户ID
+            Long userId = (Long) request.getAttribute("userId");
+            log.info("用户ID: {}", userId);
+
+            // 查询员工信息，获取store_id
+            Employee employee = employeeService.getById(userId);
+            if (employee != null) {
+                storeId = employee.getStoreId();
+                log.info("店铺ID: {}", storeId);
+            }
         }
 
         // 获取当天的开始时间和结束时间
@@ -338,22 +361,27 @@ public class DashboardController {
     /**
      * 获取今日订单价格分布
      * @param request 请求对象
+     * @param shopId 店铺ID
      * @return 今日订单价格分布
      */
     @GetMapping("/today-order-price")
-    public R<Map<String, Object>> getTodayOrderPrice(HttpServletRequest request) {
-        log.info("获取今日订单价格分布");
+    public R<Map<String, Object>> getTodayOrderPrice(HttpServletRequest request, @RequestParam(value = "shopId", required = false) Long shopId) {
+        log.info("获取今日订单价格分布，shopId: {}", shopId);
 
-        // 从请求中获取用户ID
-        Long userId = (Long) request.getAttribute("userId");
-        log.info("用户ID: {}", userId);
-
-        // 查询员工信息，获取store_id
-        Employee employee = employeeService.getById(userId);
         Long storeId = null;
-        if (employee != null) {
-            storeId = employee.getStoreId();
-            log.info("店铺ID: {}", storeId);
+        if (shopId != null) {
+            storeId = shopId;
+        } else {
+            // 从请求中获取用户ID
+            Long userId = (Long) request.getAttribute("userId");
+            log.info("用户ID: {}", userId);
+
+            // 查询员工信息，获取store_id
+            Employee employee = employeeService.getById(userId);
+            if (employee != null) {
+                storeId = employee.getStoreId();
+                log.info("店铺ID: {}", storeId);
+            }
         }
 
         // 获取当天的开始时间和结束时间
