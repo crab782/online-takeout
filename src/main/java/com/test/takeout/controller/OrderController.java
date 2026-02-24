@@ -558,52 +558,112 @@ public class OrderController {
     public R<Orders> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO) {
         log.info("提交订单：ordersSubmitDTO={}", ordersSubmitDTO);
 
-        Long userId = (Long) request.getAttribute("userId");
+        try {
+            Long userId = (Long) request.getAttribute("userId");
 
-        AddressBook addressBook = addressBookService.getById(ordersSubmitDTO.getAddressBookId());
-        if (addressBook == null) {
-            return R.error("收货地址不存在");
-        }
-
-        Orders orders = new Orders();
-        orders.setUserId(userId);
-        orders.setStoreId(ordersSubmitDTO.getStoreId());
-        orders.setStoreName(ordersSubmitDTO.getStoreName());
-        orders.setAmount(ordersSubmitDTO.getAmount());
-        orders.setReceiver(addressBook.getConsignee());
-        orders.setAddress(addressBook.getDetail());
-        orders.setPhone(addressBook.getPhone());
-        orders.setStatus(1);
-        orders.setPayStatus(0);
-        orders.setCreateTime(LocalDateTime.now());
-        orders.setUpdateTime(LocalDateTime.now());
-
-        ordersService.save(orders);
-
-        log.info("订单创建成功，订单ID：{}，订单号：{}，店铺ID：{}，店铺名称：{}，状态：1（商家已接单）", 
-                orders.getId(), orders.getNumber(), ordersSubmitDTO.getStoreId(), ordersSubmitDTO.getStoreName());
-
-        List<OrdersSubmitDTO.OrderDetailDTO> orderDetails = ordersSubmitDTO.getOrderDetails();
-        if (orderDetails != null && !orderDetails.isEmpty()) {
-            for (OrdersSubmitDTO.OrderDetailDTO detailDTO : orderDetails) {
-                OrderDetail orderDetail = new OrderDetail();
-                orderDetail.setOrderId(orders.getId());
-                orderDetail.setDishId(detailDTO.getDishId());
-                orderDetail.setSetmealId(detailDTO.getSetmealId());
-                orderDetail.setName(detailDTO.getName());
-                orderDetail.setNumber(detailDTO.getNumber());
-                orderDetail.setAmount(detailDTO.getAmount());
-                orderDetail.setImage(detailDTO.getImage());
-                orderDetailService.save(orderDetail);
+            // 使用默认地址
+            LambdaQueryWrapper<AddressBook> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(AddressBook::getUserId, userId);
+            queryWrapper.eq(AddressBook::getIsDefault, 1);
+            AddressBook addressBook = addressBookService.getOne(queryWrapper);
+            
+            if (addressBook == null) {
+                return R.error("请先设置默认收货地址");
             }
+
+            Orders orders = new Orders();
+            orders.setUserId(userId);
+            orders.setStoreId(ordersSubmitDTO.getStoreId());
+            orders.setStoreName(ordersSubmitDTO.getStoreName());
+            orders.setAmount(ordersSubmitDTO.getAmount());
+            orders.setReceiver(addressBook.getConsignee());
+            orders.setAddress(addressBook.getDetail());
+            orders.setPhone(addressBook.getPhone());
+            orders.setStatus(1);
+            orders.setPayStatus(0);
+            orders.setCreateTime(LocalDateTime.now());
+            orders.setUpdateTime(LocalDateTime.now());
+            
+            // 生成订单号
+            String orderNumber = String.valueOf(System.currentTimeMillis());
+            orders.setNumber(orderNumber);
+
+            ordersService.save(orders);
+
+            log.info("订单创建成功，订单ID：{}，订单号：{}，店铺ID：{}，店铺名称：{}，状态：1（商家已接单）", 
+                    orders.getId(), orders.getNumber(), ordersSubmitDTO.getStoreId(), ordersSubmitDTO.getStoreName());
+
+            List<OrdersSubmitDTO.OrderDetailDTO> orderDetails = ordersSubmitDTO.getOrderDetails();
+            if (orderDetails != null && !orderDetails.isEmpty()) {
+                for (OrdersSubmitDTO.OrderDetailDTO detailDTO : orderDetails) {
+                    OrderDetail orderDetail = new OrderDetail();
+                    orderDetail.setOrderId(orders.getId());
+                    orderDetail.setDishId(detailDTO.getDishId());
+                    orderDetail.setSetmealId(detailDTO.getSetmealId());
+                    orderDetail.setName(detailDTO.getName());
+                    orderDetail.setNumber(detailDTO.getNumber());
+                    orderDetail.setAmount(detailDTO.getAmount());
+                    orderDetail.setImage(detailDTO.getImage());
+                    orderDetailService.save(orderDetail);
+                }
+            }
+
+            // 只清空该店铺的购物车商品
+            LambdaQueryWrapper<ShoppingCart> cartQueryWrapper = new LambdaQueryWrapper<>();
+            cartQueryWrapper.eq(ShoppingCart::getUserId, userId);
+            cartQueryWrapper.eq(ShoppingCart::getStoreId, ordersSubmitDTO.getStoreId());
+            shoppingCartService.remove(cartQueryWrapper);
+
+            return R.success(orders);
+        } catch (Exception e) {
+            log.error("创建订单失败：", e);
+            return R.error("系统内部错误：" + e.getMessage());
         }
+    }
 
-        // 只清空该店铺的购物车商品
-        LambdaQueryWrapper<ShoppingCart> cartQueryWrapper = new LambdaQueryWrapper<>();
-        cartQueryWrapper.eq(ShoppingCart::getUserId, userId);
-        cartQueryWrapper.eq(ShoppingCart::getStoreId, ordersSubmitDTO.getStoreId());
-        shoppingCartService.remove(cartQueryWrapper);
+    /**
+     * 支付订单
+     * @param paymentInfo 支付信息，包含订单ID和支付方式
+     * @return 支付结果
+     */
+    @PostMapping("/pay")
+    public R<String> pay(@RequestBody Map<String, Object> paymentInfo) {
+        log.info("支付订单：paymentInfo={}", paymentInfo);
 
-        return R.success(orders);
+        try {
+            Long orderId = ((Number) paymentInfo.get("id")).longValue();
+            String paymentMethod = (String) paymentInfo.get("paymentMethod");
+
+            if (orderId == null) {
+                return R.error("订单ID不能为空");
+            }
+
+            // 查询订单
+            Orders order = ordersService.getById(orderId);
+            if (order == null) {
+                return R.error("订单不存在");
+            }
+
+            // 更新订单支付状态
+            Orders updateOrder = new Orders();
+            updateOrder.setId(orderId);
+            updateOrder.setPayStatus(1); // 支付成功
+            updateOrder.setPayMethod(paymentMethod.equals("alipay") ? 1 : 2); // 1:支付宝，2:微信
+            updateOrder.setPayTime(LocalDateTime.now());
+            updateOrder.setUpdateTime(LocalDateTime.now());
+
+            boolean success = ordersService.updateById(updateOrder);
+            if (success) {
+                log.info("订单支付成功，订单ID：{}，订单号：{}，支付方式：{}", 
+                        orderId, order.getNumber(), paymentMethod);
+                return R.success("支付成功");
+            } else {
+                log.error("订单支付状态更新失败，订单ID：{}", orderId);
+                return R.error("支付失败");
+            }
+        } catch (Exception e) {
+            log.error("支付订单失败：", e);
+            return R.error("系统内部错误：" + e.getMessage());
+        }
     }
 }
