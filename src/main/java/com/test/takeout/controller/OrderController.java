@@ -14,6 +14,7 @@ import com.test.takeout.service.AddressBookService;
 import com.test.takeout.service.OrderDetailService;
 import com.test.takeout.service.OrdersService;
 import com.test.takeout.service.ShoppingCartService;
+import com.test.takeout.service.StoreBalanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,16 +43,19 @@ public class OrderController {
     private final ShoppingCartService shoppingCartService;
 
     private final HttpServletRequest request;
+    private final StoreBalanceService storeBalanceService;
 
     public OrderController(OrdersService ordersService,
                        AddressBookService addressBookService,
                        OrderDetailService orderDetailService,
                        ShoppingCartService shoppingCartService,
+                       StoreBalanceService storeBalanceService,
                        HttpServletRequest request) {
         this.ordersService = ordersService;
         this.addressBookService = addressBookService;
         this.orderDetailService = orderDetailService;
         this.shoppingCartService = shoppingCartService;
+        this.storeBalanceService = storeBalanceService;
         this.request = request;
     }
 
@@ -251,6 +255,12 @@ public class OrderController {
             return R.error("订单ID不能为空");
         }
 
+        // 查询订单信息，获取店铺ID和金额
+        Orders oldOrder = ordersService.getById(orders.getId());
+        if (oldOrder == null) {
+            return R.error("订单不存在");
+        }
+
         Orders confirmOrder = new Orders();
         confirmOrder.setId(orders.getId());
         confirmOrder.setStatus(5);
@@ -258,7 +268,10 @@ public class OrderController {
 
         boolean success = ordersService.updateById(confirmOrder);
         if (success) {
-            log.info("订单确认收货成功，订单ID：{}，状态：5（已完成）", orders.getId());
+            // 订单完成，增加店铺余额
+            storeBalanceService.addBalance(oldOrder.getStoreId(), oldOrder.getAmount());
+            log.info("订单确认收货成功，订单ID：{}，状态：5（已完成），店铺ID：{}，增加余额：{}", 
+                    orders.getId(), oldOrder.getStoreId(), oldOrder.getAmount());
             return R.success("确认收货成功");
         } else {
             return R.error("确认收货失败");
@@ -298,6 +311,11 @@ public class OrderController {
 
         boolean success = ordersService.updateById(updateOrder);
         if (success) {
+            // 当订单状态更新为已完成时，增加店铺余额
+            if (orders.getStatus() == 5) {
+                storeBalanceService.addBalance(oldOrder.getStoreId(), oldOrder.getAmount());
+                log.info("订单完成，增加店铺余额：店铺ID={}，金额={}", oldOrder.getStoreId(), oldOrder.getAmount());
+            }
             log.info("订单状态更新成功：订单ID={}，订单号={}，新状态={}（{}）", 
                     orders.getId(), oldOrder.getNumber(), orders.getStatus(), statusText);
             return R.success("更新订单状态成功");
@@ -368,6 +386,11 @@ public class OrderController {
 
             boolean success = ordersService.updateById(updateOrder);
             if (success) {
+                // 当订单状态更新为已完成时，增加店铺余额
+                if (status == 5) {
+                    storeBalanceService.addBalance(oldOrder.getStoreId(), oldOrder.getAmount());
+                    log.info("订单完成，增加店铺余额：店铺ID={}，金额={}", oldOrder.getStoreId(), oldOrder.getAmount());
+                }
                 log.info("订单状态更新成功：订单ID={}，订单号={}，新状态={}（{}）", 
                         orderId, oldOrder.getNumber(), status, statusText);
                 return R.success("修改订单状态成功");
