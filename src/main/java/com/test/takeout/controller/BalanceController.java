@@ -1,5 +1,6 @@
 package com.test.takeout.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.test.takeout.common.R;
 import com.test.takeout.entity.StoreBalance;
 import com.test.takeout.entity.WithdrawalRecord;
@@ -7,6 +8,7 @@ import com.test.takeout.service.StoreBalanceService;
 import com.test.takeout.service.WithdrawalRecordService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -45,11 +47,11 @@ public class BalanceController {
      * 获取提现记录
      */
     @GetMapping("/withdrawal/records")
-    public R<com.baomidou.mybatisplus.core.metadata.IPage<WithdrawalRecord>> getWithdrawalRecords(
+    public R<IPage<WithdrawalRecord>> getWithdrawalRecords(
             @RequestParam("shopId") Long shopId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        com.baomidou.mybatisplus.core.metadata.IPage<WithdrawalRecord> records = withdrawalRecordService.getWithdrawalRecordsByStoreId(shopId, page, pageSize);
+        IPage<WithdrawalRecord> records = withdrawalRecordService.getWithdrawalRecordsByStoreId(shopId, page, pageSize);
         return R.success(records);
     }
     
@@ -60,7 +62,7 @@ public class BalanceController {
     public R<Map<String, Object>> getBalanceTrend(@RequestParam("shopId") Long shopId) {
         // 这里可以实现获取近30天余额趋势的逻辑
         // 暂时返回空数据，前端可以根据需要调整
-        Map<String, Object> trendData = new java.util.HashMap<>();
+        Map<String, Object> trendData = new HashMap<>();
         return R.success(trendData);
     }
 }
