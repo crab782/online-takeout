@@ -41,6 +41,19 @@ public class R<T> {
         r.msg = "success";
         return r;
     }
+    
+    /**
+     * 成功响应（带自定义消息）
+     * @param msg 响应消息
+     * @param <T> 数据类型
+     * @return 响应对象
+     */
+    public static <T> R<T> success(String msg) {
+        R<T> r = new R<>();
+        r.code = 1;
+        r.msg = msg;
+        return r;
+    }
 
     /**
      * 失败响应

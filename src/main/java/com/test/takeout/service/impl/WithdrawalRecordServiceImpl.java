@@ -43,6 +43,7 @@ public class WithdrawalRecordServiceImpl extends ServiceImpl<WithdrawalRecordMap
         
         // 创建提现记录
         withdrawalRecord.setStatus(0); // 0: 待处理
+        withdrawalRecord.setApplyTime(java.time.LocalDateTime.now()); // 设置申请时间
         boolean saveSuccess = this.save(withdrawalRecord);
         if (!saveSuccess) {
             return false;
