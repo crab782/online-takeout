@@ -5,17 +5,23 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.test.takeout.common.JwtUtil;
 import com.test.takeout.common.R;
 import com.test.takeout.entity.Employee;
+import com.test.takeout.entity.Orders;
 import com.test.takeout.entity.Store;
+import com.test.takeout.entity.User;
 import com.test.takeout.service.EmployeeService;
+import com.test.takeout.service.OrdersService;
 import com.test.takeout.service.StoreService;
+import com.test.takeout.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 平台管理控制器，处理平台管理相关的请求
@@ -27,10 +33,15 @@ public class PlatformController {
 
     private final EmployeeService employeeService;
     private final StoreService storeService;
+    private final OrdersService ordersService;
+    private final UserService userService;
 
-    public PlatformController(EmployeeService employeeService, StoreService storeService) {
+    public PlatformController(EmployeeService employeeService, StoreService storeService, 
+                              OrdersService ordersService, UserService userService) {
         this.employeeService = employeeService;
         this.storeService = storeService;
+        this.ordersService = ordersService;
+        this.userService = userService;
     }
 
     /**
@@ -262,45 +273,101 @@ public class PlatformController {
 
         Map<String, Object> stats = new HashMap<>();
         
+        // 获取当天的开始时间和结束时间
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        
+        // 1. 总商家数 - 查询store表
+        LambdaQueryWrapper<Store> storeWrapper = new LambdaQueryWrapper<>();
+        long totalShopCount = storeService.count(storeWrapper);
+        
+        // 2. 今日订单数 - 查询所有店铺的今日订单
+        LambdaQueryWrapper<Orders> todayOrderWrapper = new LambdaQueryWrapper<>();
+        todayOrderWrapper.ge(Orders::getCreateTime, startOfDay);
+        todayOrderWrapper.le(Orders::getCreateTime, endOfDay);
+        List<Orders> todayOrders = ordersService.list(todayOrderWrapper);
+        int todayOrderCount = todayOrders.size();
+        
+        // 3. 今日总营收 - 所有店铺今日订单的总金额
+        BigDecimal todayRevenue = todayOrders.stream()
+                .map(Orders::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // 4. 用户总数 - 查询user表
+        LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
+        long totalUserCount = userService.count(userWrapper);
+        
         // 今日数据
         Map<String, Object> todayData = new HashMap<>();
-        todayData.put("orderCount", 1250);
-        todayData.put("orderAmount", 45680.50);
-        todayData.put("userCount", 89);
-        todayData.put("shopCount", 3);
+        todayData.put("orderCount", todayOrderCount);
+        todayData.put("orderAmount", todayRevenue);
+        todayData.put("userCount", 0);
+        todayData.put("shopCount", 0);
         stats.put("today", todayData);
         
         // 本月数据
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LambdaQueryWrapper<Orders> monthOrderWrapper = new LambdaQueryWrapper<>();
+        monthOrderWrapper.ge(Orders::getCreateTime, startOfMonth);
+        monthOrderWrapper.le(Orders::getCreateTime, endOfDay);
+        List<Orders> monthOrders = ordersService.list(monthOrderWrapper);
+        BigDecimal monthRevenue = monthOrders.stream()
+                .map(Orders::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
         Map<String, Object> monthData = new HashMap<>();
-        monthData.put("orderCount", 35680);
-        monthData.put("orderAmount", 1256780.00);
-        monthData.put("userCount", 2456);
-        monthData.put("shopCount", 45);
+        monthData.put("orderCount", monthOrders.size());
+        monthData.put("orderAmount", monthRevenue);
+        monthData.put("userCount", 0);
+        monthData.put("shopCount", 0);
         stats.put("month", monthData);
         
         // 总体数据
         Map<String, Object> totalData = new HashMap<>();
-        totalData.put("totalOrderCount", 1256800);
-        totalData.put("totalOrderAmount", 45678900.00);
-        totalData.put("totalUserCount", 45678);
-        totalData.put("totalShopCount", 1256);
+        totalData.put("totalOrderCount", ordersService.count());
+        totalData.put("totalOrderAmount", 0);
+        totalData.put("totalUserCount", totalUserCount);
+        totalData.put("totalShopCount", totalShopCount);
         stats.put("total", totalData);
         
-        // 增长率数据
+        // 增长率数据（暂时设为0，后续可计算）
         Map<String, Object> growthData = new HashMap<>();
-        growthData.put("orderGrowth", 12.5);
-        growthData.put("amountGrowth", 15.8);
-        growthData.put("userGrowth", 8.3);
-        growthData.put("shopGrowth", 5.2);
+        growthData.put("orderGrowth", 0);
+        growthData.put("amountGrowth", 0);
+        growthData.put("userGrowth", 0);
+        growthData.put("shopGrowth", 0);
         stats.put("growth", growthData);
         
         // 其他统计数据
-        stats.put("onlineShopCount", 1180);
-        stats.put("offlineShopCount", 76);
-        stats.put("activeUserCount", 12345);
-        stats.put("pendingOrderCount", 156);
-        stats.put("processingOrderCount", 89);
-        stats.put("completedOrderCount", 1005);
+        // 在线店铺数（status=1）
+        LambdaQueryWrapper<Store> onlineStoreWrapper = new LambdaQueryWrapper<>();
+        onlineStoreWrapper.eq(Store::getStatus, 1);
+        stats.put("onlineShopCount", storeService.count(onlineStoreWrapper));
+        
+        // 离线店铺数（status=0）
+        LambdaQueryWrapper<Store> offlineStoreWrapper = new LambdaQueryWrapper<>();
+        offlineStoreWrapper.eq(Store::getStatus, 0);
+        stats.put("offlineShopCount", storeService.count(offlineStoreWrapper));
+        
+        // 待处理订单数（status=0）
+        LambdaQueryWrapper<Orders> pendingOrderWrapper = new LambdaQueryWrapper<>();
+        pendingOrderWrapper.eq(Orders::getStatus, 0);
+        stats.put("pendingOrderCount", ordersService.count(pendingOrderWrapper));
+        
+        // 处理中订单数（status=1,2,3,4）
+        LambdaQueryWrapper<Orders> processingOrderWrapper = new LambdaQueryWrapper<>();
+        processingOrderWrapper.in(Orders::getStatus, 1, 2, 3, 4);
+        stats.put("processingOrderCount", ordersService.count(processingOrderWrapper));
+        
+        // 已完成订单数（status=5）
+        LambdaQueryWrapper<Orders> completedOrderWrapper = new LambdaQueryWrapper<>();
+        completedOrderWrapper.eq(Orders::getStatus, 5);
+        stats.put("completedOrderCount", ordersService.count(completedOrderWrapper));
+        
+        stats.put("activeUserCount", totalUserCount);
 
         return R.success(stats);
     }
@@ -326,23 +393,58 @@ public class PlatformController {
         // 店铺数量列表
         List<Integer> shopCounts = new java.util.ArrayList<>();
         
-        java.time.LocalDate today = java.time.LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+        
+        // 遍历近30天，从昨天开始往前推29天
         for (int i = 29; i >= 0; i--) {
-            java.time.LocalDate date = today.minusDays(i);
-            dates.add(date.toString());
+            LocalDateTime date = now.minusDays(i);
+            LocalDateTime startOfDay = date.withHour(0).withMinute(0).withSecond(0).withNano(0);
+            LocalDateTime endOfDay = date.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+
+            // 格式化日期为YYYY-MM-DD
+            String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            dates.add(dateStr);
+
+            // 查询当天的所有订单
+            LambdaQueryWrapper<Orders> orderWrapper = new LambdaQueryWrapper<>();
+            orderWrapper.ge(Orders::getCreateTime, startOfDay);
+            orderWrapper.le(Orders::getCreateTime, endOfDay);
+            List<Orders> dayOrders = ordersService.list(orderWrapper);
+
+            // 统计订单数
+            int orderCount = dayOrders.size();
+            orderCounts.add(orderCount);
+
+            // 统计金额
+            BigDecimal dayAmount = dayOrders.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            orderAmounts.add(dayAmount.doubleValue());
             
-            // 模拟数据
-            orderCounts.add(1000 + (int) (Math.random() * 500));
-            orderAmounts.add(35000.0 + Math.random() * 15000.0);
-            userCounts.add(50 + (int) (Math.random() * 50));
-            shopCounts.add(1 + (int) (Math.random() * 3));
+            // 用户数量（当天有订单的用户去重）
+            long dayUserCount = dayOrders.stream()
+                    .map(Orders::getUserId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .count();
+            userCounts.add((int) dayUserCount);
+            
+            // 店铺数量（当天有订单的店铺去重）
+            long dayShopCount = dayOrders.stream()
+                    .map(Orders::getStoreId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .count();
+            shopCounts.add((int) dayShopCount);
         }
         
         trendData.put("dates", dates);
-        trendData.put("orderCounts", orderCounts);
-        trendData.put("orderAmounts", orderAmounts);
+        // 前端期望的字段名：revenues（营收）、orders（订单数）、activeShops（活跃店铺数）
+        trendData.put("revenues", orderAmounts);
+        trendData.put("orders", orderCounts);
+        trendData.put("activeShops", shopCounts);
         trendData.put("userCounts", userCounts);
-        trendData.put("shopCounts", shopCounts);
         
         // 汇总数据
         Map<String, Object> summary = new HashMap<>();
@@ -373,35 +475,71 @@ public class PlatformController {
             return R.error("时间维度参数错误，必须是 today/week/month 之一");
         }
 
+        // 获取所有店铺
+        List<Store> stores = storeService.list();
+        
+        // 获取时间范围
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startTime;
+        LocalDateTime endTime = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        
+        if (timeDimension.equals("today")) {
+            startTime = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
+        } else if (timeDimension.equals("week")) {
+            startTime = now.minusDays(7).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        } else {
+            startTime = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        }
+        
+        // 查询时间范围内的所有订单
+        LambdaQueryWrapper<Orders> orderWrapper = new LambdaQueryWrapper<>();
+        orderWrapper.ge(Orders::getCreateTime, startTime);
+        orderWrapper.le(Orders::getCreateTime, endTime);
+        List<Orders> orders = ordersService.list(orderWrapper);
+        
+        // 按店铺分组统计
         List<Map<String, Object>> rankingList = new java.util.ArrayList<>();
         
-        int shopCount = 10;
-        for (int i = 0; i < shopCount; i++) {
-            Map<String, Object> shopData = new HashMap<>();
-            shopData.put("rank", i + 1);
-            shopData.put("shopId", "shop_" + (i + 1));
-            shopData.put("shopName", "店铺" + (i + 1));
-            shopData.put("shopAddress", "测试地址" + (i + 1));
+        for (Store store : stores) {
+            // 筛选该店铺的订单
+            List<Orders> storeOrders = orders.stream()
+                    .filter(order -> store.getId().equals(order.getStoreId()))
+                    .toList();
             
-            // 根据时间维度生成不同的营收数据
-            double baseRevenue = 50000.0 - (i * 3000.0);
-            double orderCount = 500.0 - (i * 30.0);
+            // 计算营收
+            BigDecimal revenue = storeOrders.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            if (timeDimension.equals("today")) {
-                shopData.put("revenue", baseRevenue * 0.1);
-                shopData.put("orderCount", (int) (orderCount * 0.1));
-            } else if (timeDimension.equals("week")) {
-                shopData.put("revenue", baseRevenue * 0.5);
-                shopData.put("orderCount", (int) (orderCount * 0.5));
-            } else {
-                shopData.put("revenue", baseRevenue);
-                shopData.put("orderCount", (int) orderCount);
+            int orderCount = storeOrders.size();
+            
+            // 只添加有订单的店铺
+            if (orderCount > 0) {
+                Map<String, Object> shopData = new HashMap<>();
+                shopData.put("shopId", store.getId());
+                shopData.put("shopName", store.getName());
+                shopData.put("shopAddress", store.getAddress());
+                shopData.put("revenue", revenue);
+                shopData.put("orders", orderCount);
+                shopData.put("averageOrderAmount", orderCount > 0 ? 
+                    revenue.divide(BigDecimal.valueOf(orderCount), 2, BigDecimal.ROUND_HALF_UP) : 
+                    BigDecimal.ZERO);
+                
+                rankingList.add(shopData);
             }
-            
-            shopData.put("averageOrderAmount", shopData.get("revenue") instanceof Double ? 
-                (Double) shopData.get("revenue") / (Integer) shopData.get("orderCount") : 0);
-            
-            rankingList.add(shopData);
+        }
+        
+        // 按营收降序排序
+        rankingList.sort((a, b) -> {
+            BigDecimal revenueA = (BigDecimal) a.get("revenue");
+            BigDecimal revenueB = (BigDecimal) b.get("revenue");
+            return revenueB.compareTo(revenueA);
+        });
+        
+        // 添加排名
+        for (int i = 0; i < rankingList.size(); i++) {
+            rankingList.get(i).put("rank", i + 1);
         }
 
         return R.success(rankingList);
@@ -417,49 +555,125 @@ public class PlatformController {
 
         List<Map<String, Object>> lowActivityShops = new java.util.ArrayList<>();
         
-        int shopCount = 8;
-        for (int i = 0; i < shopCount; i++) {
-            Map<String, Object> shopData = new HashMap<>();
-            shopData.put("shopId", "shop_" + (i + 1));
-            shopData.put("shopName", "店铺" + (i + 1));
-            shopData.put("shopAddress", "测试地址" + (i + 1));
-            shopData.put("status", 1);
+        // 获取所有店铺
+        List<Store> stores = storeService.list();
+        
+        // 获取近7天和近30天的时间范围
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOf7Days = now.minusDays(7).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime startOf30Days = now.minusDays(30).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endTime = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        
+        // 查询近30天的所有订单
+        LambdaQueryWrapper<Orders> orderWrapper = new LambdaQueryWrapper<>();
+        orderWrapper.ge(Orders::getCreateTime, startOf30Days);
+        orderWrapper.le(Orders::getCreateTime, endTime);
+        List<Orders> orders = ordersService.list(orderWrapper);
+        
+        for (Store store : stores) {
+            // 筛选该店铺的订单
+            List<Orders> storeOrders = orders.stream()
+                    .filter(order -> store.getId().equals(order.getStoreId()))
+                    .toList();
             
-            // 模拟低活跃数据
-            shopData.put("lastOrderTime", java.time.LocalDateTime.now().minusDays(7 + i * 2));
-            shopData.put("orderCountLast7Days", i * 2);
-            shopData.put("orderCountLast30Days", 5 + i * 3);
-            shopData.put("revenueLast7Days", 500.0 * (i + 1));
-            shopData.put("revenueLast30Days", 2000.0 * (i + 1));
+            // 近7天订单
+            LocalDateTime finalStartOf7Days = startOf7Days;
+            List<Orders> orders7Days = storeOrders.stream()
+                    .filter(order -> order.getCreateTime().isAfter(finalStartOf7Days) || 
+                            order.getCreateTime().isEqual(finalStartOf7Days))
+                    .toList();
             
-            // 活跃度等级
-            String activityLevel;
-            if (i < 3) {
-                activityLevel = "极低";
-            } else if (i < 6) {
-                activityLevel = "较低";
-            } else {
-                activityLevel = "一般";
+            // 近30天订单
+            LocalDateTime finalStartOf30Days = startOf30Days;
+            List<Orders> orders30Days = storeOrders.stream()
+                    .filter(order -> order.getCreateTime().isAfter(finalStartOf30Days) || 
+                            order.getCreateTime().isEqual(finalStartOf30Days))
+                    .toList();
+            
+            // 计算近7天活跃天数（有订单的天数）
+            long activeDays = orders7Days.stream()
+                    .map(order -> order.getCreateTime().toLocalDate())
+                    .distinct()
+                    .count();
+            
+            // 近7天订单数
+            int orderCount7Days = orders7Days.size();
+            
+            // 近30天订单数
+            int orderCount30Days = orders30Days.size();
+            
+            // 近7天营收
+            BigDecimal revenue7Days = orders7Days.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // 近30天营收
+            BigDecimal revenue30Days = orders30Days.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // 最近订单时间
+            LocalDateTime lastOrderTime = storeOrders.stream()
+                    .map(Orders::getCreateTime)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+            
+            // 判断是否为低活跃商家（近7天订单数少于5单或活跃天数少于3天）
+            if (orderCount7Days < 5 || activeDays < 3) {
+                Map<String, Object> shopData = new HashMap<>();
+                shopData.put("shopId", store.getId());
+                shopData.put("shopName", store.getName());
+                shopData.put("shopAddress", store.getAddress());
+                shopData.put("status", store.getStatus());
+                shopData.put("lastOrderTime", lastOrderTime);
+                shopData.put("activeDays", (int) activeDays);
+                shopData.put("orderCountLast7Days", orderCount7Days);
+                shopData.put("orderCountLast30Days", orderCount30Days);
+                shopData.put("revenueLast7Days", revenue7Days);
+                shopData.put("revenueLast30Days", revenue30Days);
+                
+                // 活跃度等级
+                String activityLevel;
+                if (orderCount7Days == 0) {
+                    activityLevel = "极低";
+                } else if (orderCount7Days < 3) {
+                    activityLevel = "较低";
+                } else {
+                    activityLevel = "一般";
+                }
+                shopData.put("activityLevel", activityLevel);
+                
+                // 预警级别
+                String warningLevel;
+                if (orderCount7Days == 0) {
+                    warningLevel = "高";
+                } else if (orderCount7Days < 3) {
+                    warningLevel = "中";
+                } else {
+                    warningLevel = "低";
+                }
+                shopData.put("warningLevel", warningLevel);
+                
+                // 联系信息
+                shopData.put("contactName", store.getName() + " 负责人");
+                shopData.put("contactPhone", store.getPhone());
+                
+                lowActivityShops.add(shopData);
             }
-            shopData.put("activityLevel", activityLevel);
-            
-            // 预警级别
-            String warningLevel;
-            if (i < 3) {
-                warningLevel = "高";
-            } else if (i < 6) {
-                warningLevel = "中";
-            } else {
-                warningLevel = "低";
-            }
-            shopData.put("warningLevel", warningLevel);
-            
-            // 联系信息
-            shopData.put("contactName", "联系人" + (i + 1));
-            shopData.put("contactPhone", "1380013800" + i);
-            
-            lowActivityShops.add(shopData);
         }
+        
+        // 按预警级别排序（高->中->低）
+        lowActivityShops.sort((a, b) -> {
+            String levelA = (String) a.get("warningLevel");
+            String levelB = (String) b.get("warningLevel");
+            if (levelA.equals("高") && !levelB.equals("高")) return -1;
+            if (levelB.equals("高") && !levelA.equals("高")) return 1;
+            if (levelA.equals("中") && levelB.equals("低")) return -1;
+            if (levelB.equals("中") && levelA.equals("低")) return 1;
+            return 0;
+        });
 
         return R.success(lowActivityShops);
     }
@@ -474,41 +688,59 @@ public class PlatformController {
 
         List<Map<String, Object>> newShops = new java.util.ArrayList<>();
         
-        int shopCount = 10;
-        for (int i = 0; i < shopCount; i++) {
+        // 获取近30天的时间范围
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOf30Days = now.minusDays(30).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        
+        // 查询近30天入驻的店铺
+        LambdaQueryWrapper<Store> storeWrapper = new LambdaQueryWrapper<>();
+        storeWrapper.ge(Store::getCreateTime, startOf30Days);
+        storeWrapper.orderByDesc(Store::getCreateTime);
+        List<Store> stores = storeService.list(storeWrapper);
+        
+        for (Store store : stores) {
             Map<String, Object> shopData = new HashMap<>();
-            shopData.put("shopId", "shop_" + (i + 1));
-            shopData.put("shopName", "新店铺" + (i + 1));
-            shopData.put("shopAddress", "新地址" + (i + 1));
-            shopData.put("shopType", i % 2 == 0 ? "快餐" : "火锅");
+            shopData.put("shopId", store.getId());
+            shopData.put("shopName", store.getName());
+            shopData.put("shopAddress", store.getAddress());
+            shopData.put("shopType", store.getCategoryId() != null ? "餐饮" : "其他");
             
             // 入驻时间
-            shopData.put("registerTime", java.time.LocalDateTime.now().minusDays(i));
-            shopData.put("auditTime", java.time.LocalDateTime.now().minusDays(i).plusHours(2));
+            shopData.put("registerTime", store.getCreateTime());
+            shopData.put("approveTime", store.getCreateTime());
             
-            // 审核状态
+            // 审核状态（根据status判断）
             String auditStatus;
-            if (i < 3) {
-                auditStatus = "待审核";
-            } else if (i < 7) {
-                auditStatus = "审核通过";
-            } else {
+            if (store.getStatus() == 1) {
                 auditStatus = "已上线";
+            } else if (store.getStatus() == 0) {
+                auditStatus = "待审核";
+            } else {
+                auditStatus = "审核通过";
             }
             shopData.put("auditStatus", auditStatus);
             
             // 联系信息
-            shopData.put("contactName", "联系人" + (i + 1));
-            shopData.put("contactPhone", "1390013900" + i);
+            shopData.put("contactName", store.getName() + " 负责人");
+            shopData.put("contactPhone", store.getPhone());
             
             // 店铺信息
-            shopData.put("description", "这是新入驻店铺" + (i + 1) + "的描述信息");
-            shopData.put("businessHours", "09:00-22:00");
-            shopData.put("deliveryRadius", 5 + i);
+            shopData.put("description", store.getDescription());
+            shopData.put("businessHours", (store.getOpenTime() != null ? store.getOpenTime() : "09:00") + 
+                    "-" + (store.getCloseTime() != null ? store.getCloseTime() : "22:00"));
+            shopData.put("deliveryRadius", 5);
             
-            // 营业数据
-            shopData.put("orderCount", 10 + i * 5);
-            shopData.put("revenue", 500.0 + i * 100.0);
+            // 查询该店铺的订单数和营收
+            LambdaQueryWrapper<Orders> orderWrapper = new LambdaQueryWrapper<>();
+            orderWrapper.eq(Orders::getStoreId, store.getId());
+            List<Orders> storeOrders = ordersService.list(orderWrapper);
+            
+            shopData.put("orderCount", storeOrders.size());
+            BigDecimal revenue = storeOrders.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            shopData.put("revenue", revenue);
             
             newShops.add(shopData);
         }
@@ -521,44 +753,76 @@ public class PlatformController {
      * @return 订单状态分布数据
      */
     @GetMapping("/dashboard/order-status")
-    public R<Map<String, Object>> getOrderStatusDistribution() {
+    public R<List<Map<String, Object>>> getOrderStatusDistribution() {
         log.info("获取订单状态分布数据");
 
-        Map<String, Object> distribution = new HashMap<>();
+        // 获取当天的开始时间和结束时间
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
         
-        // 待处理订单
+        // 查询当天的所有订单
+        LambdaQueryWrapper<Orders> orderWrapper = new LambdaQueryWrapper<>();
+        orderWrapper.ge(Orders::getCreateTime, startOfDay);
+        orderWrapper.le(Orders::getCreateTime, endOfDay);
+        List<Orders> todayOrders = ordersService.list(orderWrapper);
+        
+        int totalCount = todayOrders.size();
+        
+        // 构建前端期望的数组格式
+        List<Map<String, Object>> distribution = new java.util.ArrayList<>();
+        
+        // 待处理订单（status=0）
+        long pendingCount = todayOrders.stream()
+                .filter(order -> order.getStatus() == 0)
+                .count();
         Map<String, Object> pending = new HashMap<>();
-        pending.put("count", 156);
-        pending.put("percentage", 12.5);
-        pending.put("color", "#FF6B6B");
-        distribution.put("pending", pending);
+        pending.put("name", "待处理");
+        pending.put("value", pendingCount);
+        pending.put("percentage", totalCount > 0 ? (pendingCount * 100.0 / totalCount) : 0);
+        Map<String, Object> pendingStyle = new HashMap<>();
+        pendingStyle.put("color", "#FF6B6B");
+        pending.put("itemStyle", pendingStyle);
+        distribution.add(pending);
         
-        // 处理中订单
+        // 处理中订单（status=1,2,3,4）
+        long processingCount = todayOrders.stream()
+                .filter(order -> order.getStatus() >= 1 && order.getStatus() <= 4)
+                .count();
         Map<String, Object> processing = new HashMap<>();
-        processing.put("count", 89);
-        processing.put("percentage", 7.1);
-        processing.put("color", "#4ECDC4");
-        distribution.put("processing", processing);
+        processing.put("name", "处理中");
+        processing.put("value", processingCount);
+        processing.put("percentage", totalCount > 0 ? (processingCount * 100.0 / totalCount) : 0);
+        Map<String, Object> processingStyle = new HashMap<>();
+        processingStyle.put("color", "#4ECDC4");
+        processing.put("itemStyle", processingStyle);
+        distribution.add(processing);
         
-        // 已完成订单
+        // 已完成订单（status=5）
+        long completedCount = todayOrders.stream()
+                .filter(order -> order.getStatus() == 5)
+                .count();
         Map<String, Object> completed = new HashMap<>();
-        completed.put("count", 1005);
-        completed.put("percentage", 80.4);
-        completed.put("color", "#06D6A0");
-        distribution.put("completed", completed);
+        completed.put("name", "已完成");
+        completed.put("value", completedCount);
+        completed.put("percentage", totalCount > 0 ? (completedCount * 100.0 / totalCount) : 0);
+        Map<String, Object> completedStyle = new HashMap<>();
+        completedStyle.put("color", "#06D6A0");
+        completed.put("itemStyle", completedStyle);
+        distribution.add(completed);
         
-        // 已取消订单
+        // 已取消订单（status=6）
+        long cancelledCount = todayOrders.stream()
+                .filter(order -> order.getStatus() == 6)
+                .count();
         Map<String, Object> cancelled = new HashMap<>();
-        cancelled.put("count", 5);
-        cancelled.put("percentage", 0.4);
-        cancelled.put("color", "#EF4444");
-        distribution.put("cancelled", cancelled);
-        
-        // 总计
-        Map<String, Object> total = new HashMap<>();
-        total.put("totalCount", 1255);
-        total.put("totalAmount", 45680.50);
-        distribution.put("total", total);
+        cancelled.put("name", "已取消");
+        cancelled.put("value", cancelledCount);
+        cancelled.put("percentage", totalCount > 0 ? (cancelledCount * 100.0 / totalCount) : 0);
+        Map<String, Object> cancelledStyle = new HashMap<>();
+        cancelledStyle.put("color", "#EF4444");
+        cancelled.put("itemStyle", cancelledStyle);
+        distribution.add(cancelled);
 
         return R.success(distribution);
     }
@@ -568,52 +832,104 @@ public class PlatformController {
      * @return 客单价分布数据
      */
     @GetMapping("/dashboard/order-price")
-    public R<Map<String, Object>> getOrderPriceDistribution() {
+    public R<List<Map<String, Object>>> getOrderPriceDistribution() {
         log.info("获取客单价分布数据");
 
-        Map<String, Object> distribution = new HashMap<>();
+        // 获取当天的开始时间和结束时间
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        
+        // 查询当天的所有订单
+        LambdaQueryWrapper<Orders> orderWrapper = new LambdaQueryWrapper<>();
+        orderWrapper.ge(Orders::getCreateTime, startOfDay);
+        orderWrapper.le(Orders::getCreateTime, endOfDay);
+        List<Orders> todayOrders = ordersService.list(orderWrapper);
+        
+        int totalCount = todayOrders.size();
+        
+        // 构建前端期望的数组格式
+        List<Map<String, Object>> distribution = new java.util.ArrayList<>();
         
         // 0-30元
+        long range1Count = todayOrders.stream()
+                .filter(order -> {
+                    BigDecimal amount = order.getAmount();
+                    return amount != null && amount.compareTo(BigDecimal.ZERO) >= 0 && amount.compareTo(new BigDecimal(30)) < 0;
+                })
+                .count();
         Map<String, Object> range1 = new HashMap<>();
-        range1.put("count", 325);
-        range1.put("percentage", 25.9);
-        range1.put("color", "#36A2EB");
-        distribution.put("range1", range1);
+        range1.put("name", "0-30元");
+        range1.put("value", range1Count);
+        range1.put("percentage", totalCount > 0 ? (range1Count * 100.0 / totalCount) : 0);
+        Map<String, Object> range1Style = new HashMap<>();
+        range1Style.put("color", "#36A2EB");
+        range1.put("itemStyle", range1Style);
+        distribution.add(range1);
         
         // 30-50元
+        long range2Count = todayOrders.stream()
+                .filter(order -> {
+                    BigDecimal amount = order.getAmount();
+                    return amount != null && amount.compareTo(new BigDecimal(30)) >= 0 && amount.compareTo(new BigDecimal(50)) < 0;
+                })
+                .count();
         Map<String, Object> range2 = new HashMap<>();
-        range2.put("count", 438);
-        range2.put("percentage", 34.9);
-        range2.put("color", "#4ECDC4");
-        distribution.put("range2", range2);
+        range2.put("name", "30-50元");
+        range2.put("value", range2Count);
+        range2.put("percentage", totalCount > 0 ? (range2Count * 100.0 / totalCount) : 0);
+        Map<String, Object> range2Style = new HashMap<>();
+        range2Style.put("color", "#4ECDC4");
+        range2.put("itemStyle", range2Style);
+        distribution.add(range2);
         
         // 50-80元
+        long range3Count = todayOrders.stream()
+                .filter(order -> {
+                    BigDecimal amount = order.getAmount();
+                    return amount != null && amount.compareTo(new BigDecimal(50)) >= 0 && amount.compareTo(new BigDecimal(80)) < 0;
+                })
+                .count();
         Map<String, Object> range3 = new HashMap<>();
-        range3.put("count", 326);
-        range3.put("percentage", 26.0);
-        range3.put("color", "#F59E0B");
-        distribution.put("range3", range3);
+        range3.put("name", "50-80元");
+        range3.put("value", range3Count);
+        range3.put("percentage", totalCount > 0 ? (range3Count * 100.0 / totalCount) : 0);
+        Map<String, Object> range3Style = new HashMap<>();
+        range3Style.put("color", "#F59E0B");
+        range3.put("itemStyle", range3Style);
+        distribution.add(range3);
         
         // 80-120元
+        long range4Count = todayOrders.stream()
+                .filter(order -> {
+                    BigDecimal amount = order.getAmount();
+                    return amount != null && amount.compareTo(new BigDecimal(80)) >= 0 && amount.compareTo(new BigDecimal(120)) < 0;
+                })
+                .count();
         Map<String, Object> range4 = new HashMap<>();
-        range4.put("count", 125);
-        range4.put("percentage", 10.0);
-        range4.put("color", "#06D6A0");
-        distribution.put("range4", range4);
+        range4.put("name", "80-120元");
+        range4.put("value", range4Count);
+        range4.put("percentage", totalCount > 0 ? (range4Count * 100.0 / totalCount) : 0);
+        Map<String, Object> range4Style = new HashMap<>();
+        range4Style.put("color", "#06D6A0");
+        range4.put("itemStyle", range4Style);
+        distribution.add(range4);
         
         // 120元以上
+        long range5Count = todayOrders.stream()
+                .filter(order -> {
+                    BigDecimal amount = order.getAmount();
+                    return amount != null && amount.compareTo(new BigDecimal(120)) >= 0;
+                })
+                .count();
         Map<String, Object> range5 = new HashMap<>();
-        range5.put("count", 41);
-        range5.put("percentage", 3.2);
-        range5.put("color", "#FF6B6B");
-        distribution.put("range5", range5);
-        
-        // 总计
-        Map<String, Object> total = new HashMap<>();
-        total.put("totalCount", 1255);
-        total.put("averagePrice", 48.5);
-        total.put("medianPrice", 42.0);
-        distribution.put("total", total);
+        range5.put("name", "120元以上");
+        range5.put("value", range5Count);
+        range5.put("percentage", totalCount > 0 ? (range5Count * 100.0 / totalCount) : 0);
+        Map<String, Object> range5Style = new HashMap<>();
+        range5Style.put("color", "#FF6B6B");
+        range5.put("itemStyle", range5Style);
+        distribution.add(range5);
 
         return R.success(distribution);
     }
@@ -634,43 +950,117 @@ public class PlatformController {
 
         Map<String, Object> result = new HashMap<>();
         
+        // 查询所有店铺
+        LambdaQueryWrapper<Store> storeWrapper = new LambdaQueryWrapper<>();
+        if (shopName != null && !shopName.isEmpty()) {
+            storeWrapper.like(Store::getName, shopName);
+        }
+        storeWrapper.orderByDesc(Store::getCreateTime);
+        
+        // 分页查询
+        Page<Store> storePage = new Page<>(page, pageSize);
+        storeService.page(storePage, storeWrapper);
+        
+        // 获取时间范围
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        LocalDateTime startOfWeek = now.minusDays(7).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        
+        // 查询所有订单
+        List<Orders> allOrders = ordersService.list();
+        
         List<Map<String, Object>> shopRevenueList = new java.util.ArrayList<>();
         
-        for (int i = 1; i <= pageSize; i++) {
+        for (Store store : storePage.getRecords()) {
             Map<String, Object> shopData = new HashMap<>();
             
-            shopData.put("shopId", 1000L + i);
-            shopData.put("shopName", "美味餐厅" + i);
-            shopData.put("shopImage", "https://example.com/shop" + i + ".jpg");
-            shopData.put("shopType", "中餐");
-            shopData.put("shopStatus", 1);
+            shopData.put("shopId", store.getId());
+            shopData.put("shopName", store.getName());
+            shopData.put("shopImage", store.getImage());
+            shopData.put("shopType", store.getCategoryId() != null ? "餐饮" : "其他");
+            shopData.put("shopStatus", store.getStatus());
             
-            shopData.put("totalOrders", 150 + i * 10);
-            shopData.put("totalRevenue", 4500.0 + i * 200.0);
-            shopData.put("averageOrderAmount", 30.0 + i * 0.5);
-            shopData.put("todayOrders", 5 + i);
-            shopData.put("todayRevenue", 150.0 + i * 10.0);
+            // 筛选该店铺的订单
+            List<Orders> storeOrders = allOrders.stream()
+                    .filter(order -> store.getId().equals(order.getStoreId()))
+                    .toList();
             
-            shopData.put("weekOrders", 35 + i * 8);
-            shopData.put("weekRevenue", 1050.0 + i * 80.0);
+            // 总订单数和总营收
+            int totalOrders = storeOrders.size();
+            BigDecimal totalRevenue = storeOrders.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            shopData.put("monthOrders", 120 + i * 15);
-            shopData.put("monthRevenue", 3600.0 + i * 150.0);
+            shopData.put("totalOrders", totalOrders);
+            shopData.put("totalRevenue", totalRevenue);
+            shopData.put("averageOrderAmount", totalOrders > 0 ? 
+                    totalRevenue.divide(BigDecimal.valueOf(totalOrders), 2, BigDecimal.ROUND_HALF_UP) : 
+                    BigDecimal.ZERO);
             
-            shopData.put("commissionRate", 0.05);
-            shopData.put("commissionAmount", (4500.0 + i * 200.0) * 0.05);
+            // 今日订单
+            LocalDateTime finalStartOfDay = startOfDay;
+            List<Orders> todayOrders = storeOrders.stream()
+                    .filter(order -> order.getCreateTime().isAfter(finalStartOfDay) || 
+                            order.getCreateTime().isEqual(finalStartOfDay))
+                    .toList();
+            shopData.put("todayOrders", todayOrders.size());
+            BigDecimal todayRevenue = todayOrders.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            shopData.put("todayRevenue", todayRevenue);
             
-            shopData.put("createTime", "2024-01-" + String.format("%02d", i));
-            shopData.put("lastOrderTime", "2024-02-08 14:30:00");
+            // 本周订单
+            LocalDateTime finalStartOfWeek = startOfWeek;
+            List<Orders> weekOrders = storeOrders.stream()
+                    .filter(order -> order.getCreateTime().isAfter(finalStartOfWeek) || 
+                            order.getCreateTime().isEqual(finalStartOfWeek))
+                    .toList();
+            shopData.put("weekOrders", weekOrders.size());
+            BigDecimal weekRevenue = weekOrders.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            shopData.put("weekRevenue", weekRevenue);
+            
+            // 本月订单
+            LocalDateTime finalStartOfMonth = startOfMonth;
+            List<Orders> monthOrders = storeOrders.stream()
+                    .filter(order -> order.getCreateTime().isAfter(finalStartOfMonth) || 
+                            order.getCreateTime().isEqual(finalStartOfMonth))
+                    .toList();
+            shopData.put("monthOrders", monthOrders.size());
+            BigDecimal monthRevenue = monthOrders.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            shopData.put("monthRevenue", monthRevenue);
+            
+            // 佣金（假设5%）
+            BigDecimal commissionRate = new BigDecimal("0.05");
+            shopData.put("commissionRate", commissionRate);
+            shopData.put("commissionAmount", totalRevenue.multiply(commissionRate).setScale(2, BigDecimal.ROUND_HALF_UP));
+            
+            shopData.put("createTime", store.getCreateTime());
+            
+            // 最近订单时间
+            LocalDateTime lastOrderTime = storeOrders.stream()
+                    .map(Orders::getCreateTime)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+            shopData.put("lastOrderTime", lastOrderTime);
             
             shopRevenueList.add(shopData);
         }
         
         result.put("list", shopRevenueList);
-        result.put("total", 100);
+        result.put("total", storePage.getTotal());
         result.put("page", page);
         result.put("pageSize", pageSize);
-        result.put("totalPages", 10);
+        result.put("totalPages", storePage.getPages());
 
         return R.success(result);
     }
@@ -691,52 +1081,73 @@ public class PlatformController {
         
         List<Map<String, Object>> trendData = new java.util.ArrayList<>();
         
-        String[] dates = {
-            "2024-01-10", "2024-01-11", "2024-01-12", "2024-01-13", "2024-01-14",
-            "2024-01-15", "2024-01-16", "2024-01-17", "2024-01-18", "2024-01-19",
-            "2024-01-20", "2024-01-21", "2024-01-22", "2024-01-23", "2024-01-24",
-            "2024-01-25", "2024-01-26", "2024-01-27", "2024-01-28", "2024-01-29",
-            "2024-01-30", "2024-01-31", "2024-02-01", "2024-02-02", "2024-02-03",
-            "2024-02-04", "2024-02-05", "2024-02-06", "2024-02-07", "2024-02-08"
-        };
+        LocalDateTime now = LocalDateTime.now();
+        int totalViews = 0;
+        int totalUniqueVisitors = 0;
+        int peakViews = 0;
+        String peakViewsDate = "";
         
-        int[] views = {
-            1250, 1320, 1180, 1450, 1380,
-            1520, 1680, 1750, 1620, 1890,
-            1950, 2100, 2250, 2180, 2320,
-            2450, 2580, 2650, 2720, 2850,
-            2920, 3050, 3180, 3250, 3320,
-            3450, 3580, 3650, 3720, 3850
-        };
-        
-        int[] uniqueVisitors = {
-            850, 920, 780, 950, 880,
-            1020, 1180, 1250, 1120, 1390,
-            1450, 1600, 1750, 1680, 1820,
-            1950, 2080, 2150, 2220, 2350,
-            2420, 2550, 2680, 2750, 2820,
-            2950, 3080, 3150, 3220, 3350
-        };
-        
-        for (int i = 0; i < dates.length; i++) {
+        // 遍历近30天
+        for (int i = 29; i >= 0; i--) {
+            LocalDateTime date = now.minusDays(i);
+            LocalDateTime startOfDay = date.withHour(0).withMinute(0).withSecond(0).withNano(0);
+            LocalDateTime endOfDay = date.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+
+            // 格式化日期为YYYY-MM-DD
+            String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+            // 查询当天的所有订单
+            LambdaQueryWrapper<Orders> orderWrapper = new LambdaQueryWrapper<>();
+            orderWrapper.ge(Orders::getCreateTime, startOfDay);
+            orderWrapper.le(Orders::getCreateTime, endOfDay);
+            List<Orders> dayOrders = ordersService.list(orderWrapper);
+
+            // 计算活跃用户数（下单用户去重）
+            long uniqueVisitors = dayOrders.stream()
+                    .map(Orders::getUserId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .count();
+            
+            // 计算活跃店铺数
+            long activeShops = dayOrders.stream()
+                    .map(Orders::getStoreId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .count();
+            
+            // 估算浏览量（假设每个下单用户平均浏览5次，加上未下单用户的浏览）
+            int views = (int) (uniqueVisitors * 5 + activeShops * 10);
+            
+            // 更新峰值
+            if (views > peakViews) {
+                peakViews = views;
+                peakViewsDate = dateStr;
+            }
+            
+            totalViews += views;
+            totalUniqueVisitors += uniqueVisitors;
+
             Map<String, Object> dayData = new HashMap<>();
-            dayData.put("date", dates[i]);
-            dayData.put("totalViews", views[i]);
-            dayData.put("uniqueVisitors", uniqueVisitors[i]);
-            dayData.put("averageViewsPerVisitor", String.format("%.2f", (double)views[i] / uniqueVisitors[i]));
+            dayData.put("date", dateStr);
+            dayData.put("totalViews", views);
+            dayData.put("uniqueVisitors", uniqueVisitors);
+            dayData.put("activeShops", activeShops);
+            dayData.put("averageViewsPerVisitor", uniqueVisitors > 0 ? 
+                    String.format("%.2f", (double)views / uniqueVisitors) : "0.00");
             trendData.add(dayData);
         }
         
         result.put("trendData", trendData);
         
         Map<String, Object> summary = new HashMap<>();
-        summary.put("totalViews", 85200);
-        summary.put("totalUniqueVisitors", 64200);
-        summary.put("averageViewsPerDay", 2840);
-        summary.put("averageUniqueVisitorsPerDay", 2140);
-        summary.put("peakViewsDate", "2024-02-08");
-        summary.put("peakViews", 3850);
-        summary.put("growthRate", 208.0);
+        summary.put("totalViews", totalViews);
+        summary.put("totalUniqueVisitors", totalUniqueVisitors);
+        summary.put("averageViewsPerDay", totalViews / 30);
+        summary.put("averageUniqueVisitorsPerDay", totalUniqueVisitors / 30);
+        summary.put("peakViewsDate", peakViewsDate);
+        summary.put("peakViews", peakViews);
+        summary.put("growthRate", 0.0);
         
         result.put("summary", summary);
 
