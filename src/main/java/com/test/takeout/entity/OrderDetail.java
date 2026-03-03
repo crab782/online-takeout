@@ -1,6 +1,7 @@
 package com.test.takeout.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
@@ -28,4 +29,10 @@ public class OrderDetail implements Serializable {
     private BigDecimal amount;
 
     private String image;
+
+    /**
+     * 套餐包含的菜品描述（非数据库字段）
+     */
+    @TableField(exist = false)
+    private String dishDesc;
 }

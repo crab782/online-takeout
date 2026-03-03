@@ -51,4 +51,17 @@ public class Setmeal implements Serializable {
      */
     @TableField(exist = false)
     private String dishDesc;
+
+    /**
+     * 套餐库存（非数据库字段，动态计算）
+     */
+    @TableField(exist = false)
+    private Integer stock;
+
+    /**
+     * 套餐库存状态（非数据库字段，动态计算）
+     * 0-售罄，1-充足，2-紧张
+     */
+    @TableField(exist = false)
+    private Integer stockStatus;
 }

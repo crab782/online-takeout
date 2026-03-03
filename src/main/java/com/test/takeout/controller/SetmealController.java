@@ -3,8 +3,10 @@ package com.test.takeout.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.test.takeout.common.R;
+import com.test.takeout.entity.Dish;
 import com.test.takeout.entity.Setmeal;
 import com.test.takeout.entity.SetmealDish;
+import com.test.takeout.service.DishService;
 import com.test.takeout.service.SetmealDishService;
 import com.test.takeout.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,9 @@ public class SetmealController {
 
     @Autowired
     private SetmealDishService setmealDishService;
+
+    @Autowired
+    private DishService dishService;
 
     /**
      * 分页查询套餐列表
@@ -69,19 +74,49 @@ public class SetmealController {
             dishQueryWrapper.eq(SetmealDish::getSetmealId, setmeal.getId());
             List<SetmealDish> setmealDishes = setmealDishService.list(dishQueryWrapper);
             
-            // 构建菜品描述字符串
+            // 构建菜品描述字符串并计算库存
             if (setmealDishes != null && !setmealDishes.isEmpty()) {
                 StringBuilder dishNames = new StringBuilder();
+                // 计算套餐库存：取包含菜品库存除以份数的最小值
+                Integer minStock = null;
+                
                 for (int i = 0; i < setmealDishes.size(); i++) {
-                    SetmealDish dish = setmealDishes.get(i);
-                    dishNames.append(dish.getName()).append("×").append(dish.getCopies());
+                    SetmealDish setmealDish = setmealDishes.get(i);
+                    dishNames.append(setmealDish.getName()).append("×").append(setmealDish.getCopies());
                     if (i < setmealDishes.size() - 1) {
                         dishNames.append("、");
                     }
+                    
+                    // 查询菜品实际库存
+                    Dish dish = dishService.getById(setmealDish.getDishId());
+                    if (dish != null && dish.getStock() != null) {
+                        // 计算该菜品可制作的套餐份数
+                        int availableCopies = dish.getStock() / setmealDish.getCopies();
+                        if (minStock == null || availableCopies < minStock) {
+                            minStock = availableCopies;
+                        }
+                    }
                 }
                 setmeal.setDishDesc(dishNames.toString());
+                
+                // 设置套餐库存和库存状态
+                if (minStock != null) {
+                    setmeal.setStock(minStock);
+                    if (minStock <= 0) {
+                        setmeal.setStockStatus(0); // 售罄
+                    } else if (minStock <= 10) {
+                        setmeal.setStockStatus(2); // 紧张
+                    } else {
+                        setmeal.setStockStatus(1); // 充足
+                    }
+                } else {
+                    setmeal.setStock(0);
+                    setmeal.setStockStatus(0);
+                }
             } else {
                 setmeal.setDishDesc("");
+                setmeal.setStock(0);
+                setmeal.setStockStatus(0);
             }
         }
 
@@ -484,19 +519,49 @@ public class SetmealController {
             dishQueryWrapper.eq(SetmealDish::getSetmealId, setmeal.getId());
             List<SetmealDish> setmealDishes = setmealDishService.list(dishQueryWrapper);
             
-            // 构建菜品描述字符串
+            // 构建菜品描述字符串并计算库存
             if (setmealDishes != null && !setmealDishes.isEmpty()) {
                 StringBuilder dishNames = new StringBuilder();
+                // 计算套餐库存：取包含菜品库存除以份数的最小值
+                Integer minStock = null;
+                
                 for (int i = 0; i < setmealDishes.size(); i++) {
-                    SetmealDish dish = setmealDishes.get(i);
-                    dishNames.append(dish.getName()).append("×").append(dish.getCopies());
+                    SetmealDish setmealDish = setmealDishes.get(i);
+                    dishNames.append(setmealDish.getName()).append("×").append(setmealDish.getCopies());
                     if (i < setmealDishes.size() - 1) {
                         dishNames.append("、");
                     }
+                    
+                    // 查询菜品实际库存
+                    Dish dish = dishService.getById(setmealDish.getDishId());
+                    if (dish != null && dish.getStock() != null) {
+                        // 计算该菜品可制作的套餐份数
+                        int availableCopies = dish.getStock() / setmealDish.getCopies();
+                        if (minStock == null || availableCopies < minStock) {
+                            minStock = availableCopies;
+                        }
+                    }
                 }
                 setmeal.setDishDesc(dishNames.toString());
+                
+                // 设置套餐库存和库存状态
+                if (minStock != null) {
+                    setmeal.setStock(minStock);
+                    if (minStock <= 0) {
+                        setmeal.setStockStatus(0); // 售罄
+                    } else if (minStock <= 10) {
+                        setmeal.setStockStatus(2); // 紧张
+                    } else {
+                        setmeal.setStockStatus(1); // 充足
+                    }
+                } else {
+                    setmeal.setStock(0);
+                    setmeal.setStockStatus(0);
+                }
             } else {
                 setmeal.setDishDesc("");
+                setmeal.setStock(0);
+                setmeal.setStockStatus(0);
             }
         }
 

@@ -157,6 +157,29 @@ public class OrderController {
             detailQueryWrapper.eq(OrderDetail::getOrderId, order.getId());
             List<OrderDetail> orderDetails = orderDetailService.list(detailQueryWrapper);
             
+            // 为套餐类型的订单详情添加菜品描述
+            for (OrderDetail orderDetail : orderDetails) {
+                if (orderDetail.getSetmealId() != null) {
+                    // 查询套餐包含的菜品
+                    LambdaQueryWrapper<SetmealDish> setmealDishQuery = new LambdaQueryWrapper<>();
+                    setmealDishQuery.eq(SetmealDish::getSetmealId, orderDetail.getSetmealId());
+                    List<SetmealDish> setmealDishes = setmealDishService.list(setmealDishQuery);
+                    
+                    // 构建菜品描述字符串
+                    if (setmealDishes != null && !setmealDishes.isEmpty()) {
+                        StringBuilder dishNames = new StringBuilder();
+                        for (int i = 0; i < setmealDishes.size(); i++) {
+                            SetmealDish dish = setmealDishes.get(i);
+                            dishNames.append(dish.getName()).append("×").append(dish.getCopies());
+                            if (i < setmealDishes.size() - 1) {
+                                dishNames.append("、");
+                            }
+                        }
+                        orderDetail.setDishDesc(dishNames.toString());
+                    }
+                }
+            }
+            
             // 将订单详情设置到订单对象中
             order.setOrderDetails(orderDetails);
         }
