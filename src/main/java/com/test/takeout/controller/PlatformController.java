@@ -8,10 +8,12 @@ import com.test.takeout.entity.Employee;
 import com.test.takeout.entity.Orders;
 import com.test.takeout.entity.Store;
 import com.test.takeout.entity.User;
+import com.test.takeout.entity.WithdrawalRecord;
 import com.test.takeout.service.EmployeeService;
 import com.test.takeout.service.OrdersService;
 import com.test.takeout.service.StoreService;
 import com.test.takeout.service.UserService;
+import com.test.takeout.service.WithdrawalRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,13 +37,16 @@ public class PlatformController {
     private final StoreService storeService;
     private final OrdersService ordersService;
     private final UserService userService;
+    private final WithdrawalRecordService withdrawalRecordService;
 
-    public PlatformController(EmployeeService employeeService, StoreService storeService, 
-                              OrdersService ordersService, UserService userService) {
+    public PlatformController(EmployeeService employeeService, StoreService storeService,
+                              OrdersService ordersService, UserService userService,
+                              WithdrawalRecordService withdrawalRecordService) {
         this.employeeService = employeeService;
         this.storeService = storeService;
         this.ordersService = ordersService;
         this.userService = userService;
+        this.withdrawalRecordService = withdrawalRecordService;
     }
 
     /**
@@ -1260,44 +1265,109 @@ public class PlatformController {
         log.info("获取提现记录，页码: {}, 每页数量: {}, 搜索关键词: {}, 状态: {}", page, pageSize, search, status);
 
         Map<String, Object> result = new HashMap<>();
-        
+
+        // 构建查询条件
+        LambdaQueryWrapper<WithdrawalRecord> queryWrapper = new LambdaQueryWrapper<>();
+
+        // 状态筛选
+        if (status != null && !status.isEmpty()) {
+            switch (status) {
+                case "approved":
+                    queryWrapper.eq(WithdrawalRecord::getStatus, 1);
+                    break;
+                case "processing":
+                    queryWrapper.eq(WithdrawalRecord::getStatus, 0);
+                    break;
+                case "rejected":
+                    queryWrapper.eq(WithdrawalRecord::getStatus, 2);
+                    break;
+            }
+        }
+
+        // 搜索关键词（按店铺名称搜索）
+        if (search != null && !search.isEmpty()) {
+            // 先获取匹配的店铺ID列表
+            LambdaQueryWrapper<Store> storeWrapper = new LambdaQueryWrapper<>();
+            storeWrapper.like(Store::getName, search);
+            List<Store> stores = storeService.list(storeWrapper);
+            List<Long> storeIds = stores.stream().map(Store::getId).toList();
+
+            if (!storeIds.isEmpty()) {
+                queryWrapper.in(WithdrawalRecord::getStoreId, storeIds);
+            } else {
+                // 没有匹配的店铺，返回空结果
+                result.put("list", new java.util.ArrayList<>());
+                result.put("total", 0);
+                result.put("page", page);
+                result.put("pageSize", pageSize);
+                result.put("totalPages", 0);
+                return R.success(result);
+            }
+        }
+
+        // 按申请时间倒序排列
+        queryWrapper.orderByDesc(WithdrawalRecord::getApplyTime);
+
+        // 分页查询
+        Page<WithdrawalRecord> pageParam = new Page<>(page, pageSize);
+        Page<WithdrawalRecord> withdrawalPage = withdrawalRecordService.page(pageParam, queryWrapper);
+
+        // 转换为前端需要的格式
         List<Map<String, Object>> withdrawalList = new java.util.ArrayList<>();
-        
-        String[] statuses = {"已通过", "处理中", "已拒绝"};
-        String[] statusesEn = {"approved", "processing", "rejected"};
-        
-        for (int i = 1; i <= pageSize; i++) {
+
+        for (WithdrawalRecord record : withdrawalPage.getRecords()) {
             Map<String, Object> withdrawalData = new HashMap<>();
-            
-            withdrawalData.put("id", 10000L + i);
-            withdrawalData.put("shopId", 1000L + i);
-            withdrawalData.put("shopName", "美味餐厅" + i);
-            withdrawalData.put("shopType", "中餐");
-            
-            withdrawalData.put("amount", 500.0 + i * 10.0);
-            withdrawalData.put("fee", 2.5 + i * 0.05);
-            withdrawalData.put("actualAmount", 497.5 + i * 9.95);
-            
-            int statusIndex = (i - 1) % 3;
-            withdrawalData.put("status", statuses[statusIndex]);
-            withdrawalData.put("statusEn", statusesEn[statusIndex]);
-            
-            withdrawalData.put("applyTime", "2024-02-08 " + String.format("%02d", 8 + i) + ":30:00");
-            withdrawalData.put("processTime", statusIndex == 0 ? "2024-02-08 " + String.format("%02d", 9 + i) + ":30:00" : null);
-            withdrawalData.put("remark", statusIndex == 2 ? "账户信息有误" : "");
-            
-            withdrawalData.put("bankName", "中国工商银行");
-            withdrawalData.put("bankAccount", "6222****" + String.format("%04d", 1000 + i));
-            withdrawalData.put("accountName", "张三" + i);
-            
+
+            withdrawalData.put("id", record.getId());
+            withdrawalData.put("shopId", record.getStoreId());
+
+            // 获取店铺信息
+            Store store = storeService.getById(record.getStoreId());
+            withdrawalData.put("shopName", store != null ? store.getName() : "未知店铺");
+            withdrawalData.put("shopType", "中餐"); // 默认类型
+
+            withdrawalData.put("amount", record.getAmount());
+            // 计算手续费（假设费率为0.5%）
+            BigDecimal fee = record.getAmount().multiply(new BigDecimal("0.005"));
+            withdrawalData.put("fee", fee);
+            withdrawalData.put("actualAmount", record.getAmount().subtract(fee));
+
+            // 状态转换
+            String[] statuses = {"处理中", "已通过", "已拒绝"};
+            String[] statusesEn = {"processing", "approved", "rejected"};
+            int statusIndex = record.getStatus() != null ? record.getStatus() : 0;
+            if (statusIndex >= 0 && statusIndex < 3) {
+                withdrawalData.put("status", statuses[statusIndex]);
+                withdrawalData.put("statusEn", statusesEn[statusIndex]);
+            } else {
+                withdrawalData.put("status", "处理中");
+                withdrawalData.put("statusEn", "processing");
+            }
+
+            // 时间格式化
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            withdrawalData.put("applyTime", record.getApplyTime() != null ? record.getApplyTime().format(formatter) : "");
+            withdrawalData.put("processTime", record.getProcessTime() != null ? record.getProcessTime().format(formatter) : null);
+            withdrawalData.put("remark", record.getRemark() != null ? record.getRemark() : "");
+
+            withdrawalData.put("bankName", record.getBankName() != null ? record.getBankName() : "");
+            // 银行账号脱敏处理
+            String bankAccount = record.getBankAccount();
+            if (bankAccount != null && bankAccount.length() > 4) {
+                bankAccount = bankAccount.substring(0, bankAccount.length() - 4).replaceAll(".", "*")
+                        + bankAccount.substring(bankAccount.length() - 4);
+            }
+            withdrawalData.put("bankAccount", bankAccount != null ? bankAccount : "");
+            withdrawalData.put("accountName", record.getAccountName() != null ? record.getAccountName() : "");
+
             withdrawalList.add(withdrawalData);
         }
-        
+
         result.put("list", withdrawalList);
-        result.put("total", 86);
+        result.put("total", withdrawalPage.getTotal());
         result.put("page", page);
         result.put("pageSize", pageSize);
-        result.put("totalPages", 9);
+        result.put("totalPages", withdrawalPage.getPages());
 
         return R.success(result);
     }
