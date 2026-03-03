@@ -22,6 +22,8 @@ public class SetmealDish implements Serializable {
 
     private String name;
 
+    private java.math.BigDecimal price;
+
     private Integer copies;
 
     private Integer sort;

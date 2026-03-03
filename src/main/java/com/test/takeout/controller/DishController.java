@@ -55,8 +55,8 @@ public class DishController {
             queryWrapper.eq(Dish::getStoreId, shopId);
         }
         
-        // 按照更新时间倒序排列
-        queryWrapper.orderByDesc(Dish::getUpdateTime);
+        // 按照价格从小到大排序
+        queryWrapper.orderByAsc(Dish::getPrice);
 
         // 执行分页查询
         dishService.page(pageInfo, queryWrapper);

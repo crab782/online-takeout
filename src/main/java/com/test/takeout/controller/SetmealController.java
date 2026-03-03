@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -119,16 +120,105 @@ public class SetmealController {
      * @return 新增结果
      */
     @PostMapping
-    public R<String> save(@RequestBody Setmeal setmeal) {
-        log.info("新增套餐：setmeal={}", setmeal);
+    public R<String> save(@RequestBody Map<String, Object> setmealData) {
+        log.info("新增套餐：setmealData={}", setmealData);
 
-        // 保存套餐
-        boolean result = setmealService.save(setmeal);
+        try {
+            // 提取套餐基本信息
+            Setmeal setmeal = new Setmeal();
+            setmeal.setName((String) setmealData.get("name"));
+            // 处理categoryId，支持数字和字符串类型
+            Object categoryIdObj = setmealData.get("categoryId");
+            if (categoryIdObj != null) {
+                if (categoryIdObj instanceof Integer) {
+                    setmeal.setCategoryId(categoryIdObj.toString());
+                } else {
+                    setmeal.setCategoryId((String) categoryIdObj);
+                }
+            }
+            // 处理price，支持数字和字符串类型
+            Object priceObj = setmealData.get("price");
+            if (priceObj != null) {
+                if (priceObj instanceof Number) {
+                    setmeal.setPrice(new BigDecimal(priceObj.toString()));
+                } else {
+                    setmeal.setPrice(new BigDecimal(priceObj.toString()));
+                }
+            }
+            setmeal.setDescription((String) setmealData.get("description"));
+            setmeal.setImage((String) setmealData.get("image"));
+            // 处理status，支持数字和字符串类型
+            Object statusObj = setmealData.get("status");
+            if (statusObj != null) {
+                if (statusObj instanceof Integer) {
+                    setmeal.setStatus((Integer) statusObj);
+                } else {
+                    setmeal.setStatus(Integer.parseInt(statusObj.toString()));
+                }
+            }
+            // 处理storeId，支持数字和字符串类型
+            Object storeIdObj = setmealData.get("storeId");
+            if (storeIdObj != null) {
+                if (storeIdObj instanceof Long) {
+                    setmeal.setStoreId((Long) storeIdObj);
+                } else if (storeIdObj instanceof Integer) {
+                    setmeal.setStoreId(((Integer) storeIdObj).longValue());
+                } else {
+                    setmeal.setStoreId(Long.parseLong(storeIdObj.toString()));
+                }
+            }
 
-        if (result) {
-            return R.success("新增成功");
-        } else {
-            return R.error("新增失败");
+            // 保存套餐
+            boolean result = setmealService.save(setmeal);
+
+            if (result) {
+                // 处理套餐包含的菜品
+                List<Map<String, Object>> setmealDishes = (List<Map<String, Object>>) setmealData.get("setmealDishes");
+                if (setmealDishes != null && !setmealDishes.isEmpty()) {
+                    for (Map<String, Object> dish : setmealDishes) {
+                        SetmealDish setmealDish = new SetmealDish();
+                        setmealDish.setSetmealId(setmeal.getId());
+                        // 处理dishId，支持数字和字符串类型
+                        Object dishIdObj = dish.get("dishId");
+                        if (dishIdObj != null) {
+                            if (dishIdObj instanceof Long) {
+                                setmealDish.setDishId((Long) dishIdObj);
+                            } else if (dishIdObj instanceof Integer) {
+                                setmealDish.setDishId(((Integer) dishIdObj).longValue());
+                            } else {
+                                setmealDish.setDishId(Long.parseLong(dishIdObj.toString()));
+                            }
+                        }
+                        setmealDish.setName((String) dish.get("name"));
+                        // 处理price，支持数字和字符串类型
+                        Object dishPriceObj = dish.get("price");
+                        if (dishPriceObj != null) {
+                            if (dishPriceObj instanceof Number) {
+                                setmealDish.setPrice(new BigDecimal(dishPriceObj.toString()));
+                            } else {
+                                setmealDish.setPrice(new BigDecimal(dishPriceObj.toString()));
+                            }
+                        }
+                        // 处理copies，支持数字和字符串类型
+                        Object copiesObj = dish.get("copies");
+                        if (copiesObj != null) {
+                            if (copiesObj instanceof Integer) {
+                                setmealDish.setCopies((Integer) copiesObj);
+                            } else {
+                                setmealDish.setCopies(Integer.parseInt(copiesObj.toString()));
+                            }
+                        }
+                        setmealDish.setSort(0); // 默认排序
+                        setmealDishService.save(setmealDish);
+                    }
+                }
+                return R.success("新增成功");
+            } else {
+                return R.error("新增失败");
+            }
+        } catch (Exception e) {
+            log.error("新增套餐失败：", e);
+            return R.error("新增失败：" + e.getMessage());
         }
     }
 
