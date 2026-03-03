@@ -106,6 +106,31 @@ public class PlatformController {
     }
 
     /**
+     * 获取平台信息
+     * @return 平台信息
+     */
+    @GetMapping("/info")
+    public R<Map<String, Object>> getPlatformInfo() {
+        log.info("获取平台信息");
+
+        Map<String, Object> result = new HashMap<>();
+        
+        // 统计店铺数量
+        long totalShops = storeService.count();
+        result.put("totalShops", totalShops);
+        
+        // 统计用户数量
+        long totalUsers = userService.count();
+        result.put("totalUsers", totalUsers);
+        
+        // 平台名称
+        result.put("platformName", "外卖平台管理系统");
+        result.put("version", "1.0.0");
+
+        return R.success(result);
+    }
+
+    /**
      * 获取店铺列表（包含评论统计数据）
      * @param page 当前页码
      * @param pageSize 每页数量

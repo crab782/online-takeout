@@ -32,10 +32,12 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/employee/logout") // 排除登出接口
                 .excludePathPatterns("/platform/login") // 排除平台登录接口
                 .excludePathPatterns("/platform/logout") // 排除平台登出接口
+                .excludePathPatterns("/platform/info") // 排除平台信息接口
                 .excludePathPatterns("/backend/user/login") // 排除后端登录接口
                 .excludePathPatterns("/backend/user/logout") // 排除后端登出接口
                 .excludePathPatterns("/backend/user/info") // 排除后端用户信息接口
                 .excludePathPatterns("/store/**") // 排除店铺接口
+                .excludePathPatterns("/shop/**") // 排除shop接口
                 .excludePathPatterns("/category/**") // 排除分类接口
                 .excludePathPatterns("/dish/**") // 排除菜品接口
                 .excludePathPatterns("/setmeal/**") // 排除套餐接口
