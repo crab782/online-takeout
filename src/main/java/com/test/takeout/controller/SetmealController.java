@@ -62,9 +62,32 @@ public class SetmealController {
         // 执行分页查询
         setmealService.page(pageInfo, queryWrapper);
 
+        // 查询每个套餐包含的菜品
+        List<Setmeal> records = pageInfo.getRecords();
+        for (Setmeal setmeal : records) {
+            LambdaQueryWrapper<SetmealDish> dishQueryWrapper = new LambdaQueryWrapper<>();
+            dishQueryWrapper.eq(SetmealDish::getSetmealId, setmeal.getId());
+            List<SetmealDish> setmealDishes = setmealDishService.list(dishQueryWrapper);
+            
+            // 构建菜品描述字符串
+            if (setmealDishes != null && !setmealDishes.isEmpty()) {
+                StringBuilder dishNames = new StringBuilder();
+                for (int i = 0; i < setmealDishes.size(); i++) {
+                    SetmealDish dish = setmealDishes.get(i);
+                    dishNames.append(dish.getName()).append("×").append(dish.getCopies());
+                    if (i < setmealDishes.size() - 1) {
+                        dishNames.append("、");
+                    }
+                }
+                setmeal.setDishDesc(dishNames.toString());
+            } else {
+                setmeal.setDishDesc("");
+            }
+        }
+
         // 构建响应数据
         Map<String, Object> data = new HashMap<>();
-        data.put("list", pageInfo.getRecords());
+        data.put("list", records);
         data.put("total", pageInfo.getTotal());
 
         return R.success(data);
@@ -454,6 +477,28 @@ public class SetmealController {
         queryWrapper.orderByAsc(Setmeal::getPrice);
 
         List<Setmeal> setmealList = setmealService.list(queryWrapper);
+
+        // 查询每个套餐包含的菜品
+        for (Setmeal setmeal : setmealList) {
+            LambdaQueryWrapper<SetmealDish> dishQueryWrapper = new LambdaQueryWrapper<>();
+            dishQueryWrapper.eq(SetmealDish::getSetmealId, setmeal.getId());
+            List<SetmealDish> setmealDishes = setmealDishService.list(dishQueryWrapper);
+            
+            // 构建菜品描述字符串
+            if (setmealDishes != null && !setmealDishes.isEmpty()) {
+                StringBuilder dishNames = new StringBuilder();
+                for (int i = 0; i < setmealDishes.size(); i++) {
+                    SetmealDish dish = setmealDishes.get(i);
+                    dishNames.append(dish.getName()).append("×").append(dish.getCopies());
+                    if (i < setmealDishes.size() - 1) {
+                        dishNames.append("、");
+                    }
+                }
+                setmeal.setDishDesc(dishNames.toString());
+            } else {
+                setmeal.setDishDesc("");
+            }
+        }
 
         return R.success(setmealList);
     }

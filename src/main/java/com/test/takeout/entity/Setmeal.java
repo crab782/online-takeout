@@ -45,4 +45,10 @@ public class Setmeal implements Serializable {
     private Long createUser;
 
     private Long updateUser;
+
+    /**
+     * 套餐包含的菜品描述（非数据库字段）
+     */
+    @TableField(exist = false)
+    private String dishDesc;
 }
