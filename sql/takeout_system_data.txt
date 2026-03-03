@@ -13,6 +13,7 @@ mysql> show tables;
 | setmeal                  |
 | setmeal_dish             |
 | shopping_cart            |
+| stock_log                |
 | store                    |
 | store_balance            |
 | store_favorite           |
@@ -21,7 +22,7 @@ mysql> show tables;
 | user_checkin             |
 | withdrawal_record        |
 +--------------------------+
-18 rows in set (0.00 sec)
+19 rows in set (0.00 sec)
 
 mysql> DESC `activity`;
 +-------------+--------------+------+-----+-------------------+-----------------------------------------------+
@@ -104,24 +105,26 @@ mysql> DESC `comment`;
 15 rows in set (0.00 sec)
 
 mysql> DESC `dish`;
-+-------------+---------------+------+-----+-------------------+-----------------------------------------------+
-| Field       | Type          | Null | Key | Default           | Extra                                         |
-+-------------+---------------+------+-----+-------------------+-----------------------------------------------+
-| id          | bigint        | NO   | PRI | NULL              | auto_increment                                |
-| name        | varchar(50)   | NO   | MUL | NULL              |                                               |
-| category_id | bigint        | YES  | MUL | NULL              |                                               |
-| price       | decimal(10,2) | NO   |     | NULL              |                                               |
-| description | varchar(255)  | YES  |     | NULL              |                                               |
-| image       | varchar(255)  | YES  |     | NULL              |                                               |
-| status      | tinyint       | YES  | MUL | 1                 |                                               |
-| create_time | datetime      | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
-| update_time | datetime      | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
-| create_user | bigint        | YES  |     | NULL              |                                               |
-| update_user | bigint        | YES  |     | NULL              |                                               |
-| store_id    | bigint        | YES  | MUL | NULL              |                                               |
-| store_name  | varchar(255)  | YES  |     | NULL              |                                               |
-+-------------+---------------+------+-----+-------------------+-----------------------------------------------+
-13 rows in set (0.00 sec)
++--------------+---------------+------+-----+-------------------+-----------------------------------------------+
+| Field        | Type          | Null | Key | Default           | Extra                                         |
++--------------+---------------+------+-----+-------------------+-----------------------------------------------+
+| id           | bigint        | NO   | PRI | NULL              | auto_increment                                |
+| name         | varchar(50)   | NO   | MUL | NULL              |                                               |
+| category_id  | bigint        | YES  | MUL | NULL              |                                               |
+| price        | decimal(10,2) | NO   |     | NULL              |                                               |
+| description  | varchar(255)  | YES  |     | NULL              |                                               |
+| image        | varchar(255)  | YES  |     | NULL              |                                               |
+| status       | tinyint       | YES  | MUL | 1                 |                                               |
+| create_time  | datetime      | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
+| update_time  | datetime      | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
+| create_user  | bigint        | YES  |     | NULL              |                                               |
+| update_user  | bigint        | YES  |     | NULL              |                                               |
+| store_id     | bigint        | YES  | MUL | NULL              |                                               |
+| store_name   | varchar(255)  | YES  |     | NULL              |                                               |
+| stock        | int           | YES  |     | 999               |                                               |
+| stock_status | tinyint       | YES  |     | 1                 |                                               |
++--------------+---------------+------+-----+-------------------+-----------------------------------------------+
+15 rows in set (0.00 sec)
 
 mysql> DESC `employee`;
 +------------+--------------+------+-----+-------------------+-----------------------------------------------+
@@ -198,24 +201,26 @@ mysql> DESC `setmeal_dish`;
 7 rows in set (0.00 sec)
 
 mysql> DESC `setmeal`;
-+-------------+---------------+------+-----+-------------------+-----------------------------------------------+
-| Field       | Type          | Null | Key | Default           | Extra                                         |
-+-------------+---------------+------+-----+-------------------+-----------------------------------------------+
-| id          | bigint        | NO   | PRI | NULL              | auto_increment                                |
-| category_id | varchar(50)   | YES  | MUL | NULL              |                                               |
-| name        | varchar(50)   | NO   | MUL | NULL              |                                               |
-| price       | decimal(10,2) | NO   |     | NULL              |                                               |
-| status      | tinyint       | YES  | MUL | 1                 |                                               |
-| description | varchar(255)  | YES  |     | NULL              |                                               |
-| image       | varchar(255)  | YES  |     | NULL              |                                               |
-| create_time | datetime      | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
-| update_time | datetime      | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
-| create_user | bigint        | YES  |     | NULL              |                                               |
-| update_user | bigint        | YES  |     | NULL              |                                               |
-| store_id    | bigint        | YES  | MUL | NULL              |                                               |
-| store_name  | varchar(255)  | YES  |     | NULL              |                                               |
-+-------------+---------------+------+-----+-------------------+-----------------------------------------------+
-13 rows in set (0.00 sec)
++--------------+---------------+------+-----+-------------------+-----------------------------------------------+
+| Field        | Type          | Null | Key | Default           | Extra                                         |
++--------------+---------------+------+-----+-------------------+-----------------------------------------------+
+| id           | bigint        | NO   | PRI | NULL              | auto_increment                                |
+| category_id  | varchar(50)   | YES  | MUL | NULL              |                                               |
+| name         | varchar(50)   | NO   | MUL | NULL              |                                               |
+| price        | decimal(10,2) | NO   |     | NULL              |                                               |
+| status       | tinyint       | YES  | MUL | 1                 |                                               |
+| description  | varchar(255)  | YES  |     | NULL              |                                               |
+| image        | varchar(255)  | YES  |     | NULL              |                                               |
+| create_time  | datetime      | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
+| update_time  | datetime      | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
+| create_user  | bigint        | YES  |     | NULL              |                                               |
+| update_user  | bigint        | YES  |     | NULL              |                                               |
+| store_id     | bigint        | YES  | MUL | NULL              |                                               |
+| store_name   | varchar(255)  | YES  |     | NULL              |                                               |
+| stock        | int           | YES  |     | 999               |                                               |
+| stock_status | tinyint       | YES  |     | 1                 |                                               |
++--------------+---------------+------+-----+-------------------+-----------------------------------------------+
+15 rows in set (0.00 sec)
 
 mysql> DESC `shopping_cart`;
 +-------------+---------------+------+-----+-------------------+-------------------+
@@ -401,72 +406,72 @@ mysql> SELECT * FROM `comment`;
 Empty set (0.00 sec)
 
 mysql> SELECT * FROM `dish`;
-+-----+----------------+-------------+---------+------------------------------------+----------------------------------------+--------+---------------------+---------------------+-------------+-------------+----------+------------+
-| id  | name           | category_id | price   | description                        | image                                  | status | create_time         | update_time         | create_user | update_user | store_id | store_name |
-+-----+----------------+-------------+---------+------------------------------------+----------------------------------------+--------+---------------------+---------------------+-------------+-------------+----------+------------+
-|   1 | 香辣鸡腿堡     |           1 |   19.00 | 香辣鸡腿堡，外酥里嫩，香辣可口     | https://example.com/kfc/burger1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |
-|   2 | 奥尔良烤鸡腿堡 |           1 |   20.00 | 奥尔良烤鸡腿堡，鲜嫩多汁           | https://example.com/kfc/burger2.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |
-|   3 | 原味鸡         |           2 |   12.00 | 原味鸡，经典美味                   | https://example.com/kfc/chicken1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |
-|   4 | 香辣鸡翅       |           2 |   13.00 | 香辣鸡翅，外酥里嫩                 | https://example.com/kfc/wing1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |
-|   5 | 薯条（大）     |           3 |   12.00 | 薯条（大），金黄酥脆               | https://example.com/kfc/fries1.jpg     |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |
-|   6 | 蛋挞           |           3 |    8.00 | 葡式蛋挞，香甜可口                 | https://example.com/kfc/tart1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |
-|   7 | 可乐           |           4 |    9.00 | 可口可乐，冰爽解渴                 | https://example.com/kfc/coke1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |
-|   8 | 雪碧           |           4 |    9.00 | 雪碧，清爽怡人                     | https://example.com/kfc/sprite1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |
-|   9 | 巨无霸         |           6 |   24.00 | 巨无霸，双层牛肉，满足感十足       | https://example.com/mcd/burger1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |
-|  10 | 麦辣鸡腿堡     |           6 |   19.00 | 麦辣鸡腿堡，香辣过瘾               | https://example.com/mcd/burger2.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |
-|  11 | 麦乐鸡         |           7 |   18.00 | 麦乐鸡，外酥里嫩                   | https://example.com/mcd/nuggets1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |
-|  12 | 薯条（中）     |           7 |   10.00 | 薯条（中），金黄酥脆               | https://example.com/mcd/fries1.jpg     |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |
-|  13 | 麦旋风         |           8 |   15.00 | 麦旋风，香浓美味                   | https://example.com/mcd/shake1.jpg     |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |
-|  14 | 可乐           |           9 |    9.00 | 可口可乐，冰爽解渴                 | https://example.com/mcd/coke1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |
-|  15 | 拿铁           |          11 |   32.00 | 拿铁，香浓咖啡与丝滑牛奶的完美融合 | https://example.com/sb/latte1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |
-|  16 | 美式咖啡       |          11 |   25.00 | 美式咖啡，纯正咖啡香               | https://example.com/sb/americano1.jpg  |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |
-|  17 | 卡布奇诺       |          11 |   32.00 | 卡布奇诺，经典意式咖啡             | https://example.com/sb/cappuccino1.jpg |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |
-|  18 | 抹茶星冰乐     |          12 |   35.00 | 抹茶星冰乐，清爽冰爽               | https://example.com/sb/matcha1.jpg     |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |
-|  19 | 芒果西番莲果茶 |          12 |   30.00 | 芒果西番莲果茶，果香浓郁           | https://example.com/sb/fruittea1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |
-|  20 | 芝士蛋糕       |          14 |   28.00 | 芝士蛋糕，香甜可口                 | https://example.com/sb/cake1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |
-|  21 | 可颂           |          13 |   18.00 | 可颂，酥脆可口                     | https://example.com/sb/croissant1.jpg  |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |
-|  22 | 超级至尊披萨   |          16 |   89.00 | 超级至尊披萨，多种配料，丰富美味   | https://example.com/ph/pizza1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |
-|  23 | 夏威夷风情披萨 |          16 |   79.00 | 夏威夷风情披萨，清爽果香           | https://example.com/ph/pizza2.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |
-|  24 | 意大利肉酱面   |          17 |   45.00 | 意大利肉酱面，经典意式风味         | https://example.com/ph/pasta1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |
-|  25 | 奶油蘑菇汤     |          18 |   18.00 | 奶油蘑菇汤，香浓美味               | https://example.com/ph/soup1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |
-|  26 | 炸鸡翅         |          18 |   28.00 | 炸鸡翅，外酥里嫩                   | https://example.com/ph/wing1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |
-|  27 | 提拉米苏       |          19 |   32.00 | 提拉米苏，经典意式甜点             | https://example.com/ph/tiramisu1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |
-|  28 | 芝芝莓莓       |          21 |   28.00 | 芝芝莓莓，新鲜草莓与芝士的完美结合 | https://example.com/ht/milktea1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |
-|  29 | 多肉葡萄       |          21 |   28.00 | 多肉葡萄，果肉饱满，口感丰富       | https://example.com/ht/milktea2.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |
-|  30 | 满杯水果茶     |          22 |   32.00 | 满杯水果茶，多种水果，清爽解渴     | https://example.com/ht/fruittea1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |
-|  31 | 满杯红柚茶     |          22 |   28.00 | 满杯红柚茶，清新果香               | https://example.com/ht/fruittea2.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |
-|  32 | 纯绿茶         |          23 |   18.00 | 纯绿茶，清香淡雅                   | https://example.com/ht/greentea1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |
-|  33 | 珍珠奶茶       |          21 |   22.00 | 珍珠奶茶，经典港式风味             | https://example.com/ht/bobatea1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |
-|  34 | 蛋挞           |          24 |   12.00 | 葡式蛋挞，香甜可口                 | https://example.com/ht/tart1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |
-|  35 | 蛋糕           |          24 |   18.00 | 蛋糕，松软香甜                     | https://example.com/ht/cake1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |
-|  36 | 芝芝芒芒       |          21 |   29.00 | 芝芝芒芒，新鲜芒果与芝士的完美结合 | https://example.com/ht/milktea3.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  37 | 芝芝桃桃       |          21 |   28.00 | 芝芝桃桃，新鲜桃子与芝士的完美结合 | https://example.com/ht/milktea4.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  38 | 黑糖珍珠奶茶   |          21 |   24.00 | 黑糖珍珠奶茶，经典台式风味         | https://example.com/ht/milktea5.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  39 | 抹茶奶茶       |          21 |   26.00 | 抹茶奶茶，日式抹茶风味             | https://example.com/ht/milktea6.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  40 | 焦糖奶茶       |          21 |   24.00 | 焦糖奶茶，香甜可口                 | https://example.com/ht/milktea7.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  41 | 燕麦奶茶       |          21 |   25.00 | 燕麦奶茶，健康营养                 | https://example.com/ht/milktea8.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  42 | 红豆奶茶       |          21 |   23.00 | 红豆奶茶，软糯香甜                 | https://example.com/ht/milktea9.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  43 | 芋泥奶茶       |          21 |   25.00 | 芋泥奶茶，细腻绵密                 | https://example.com/ht/milktea10.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  44 | 满杯橙子茶     |          22 |   26.00 | 满杯橙子茶，清新果香               | https://example.com/ht/fruittea3.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  45 | 满杯蓝莓茶     |          22 |   28.00 | 满杯蓝莓茶，抗氧化                 | https://example.com/ht/fruittea4.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  46 | 满杯猕猴桃茶   |          22 |   27.00 | 满杯猕猴桃茶，维C丰富              | https://example.com/ht/fruittea5.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  47 | 满杯菠萝茶     |          22 |   25.00 | 满杯菠萝茶，热带风情               | https://example.com/ht/fruittea6.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  48 | 满杯草莓茶     |          22 |   27.00 | 满杯草莓茶，香甜可口               | https://example.com/ht/fruittea7.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  49 | 满杯西瓜茶     |          22 |   24.00 | 满杯西瓜茶，清爽解渴               | https://example.com/ht/fruittea8.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  50 | 茉莉花茶       |          23 |   16.00 | 茉莉花茶，清香淡雅                 | https://example.com/ht/greentea2.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  51 | 乌龙茶         |          23 |   18.00 | 乌龙茶，香气四溢                   | https://example.com/ht/greentea3.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  52 | 红茶           |          23 |   16.00 | 红茶，醇厚香甜                     | https://example.com/ht/greentea4.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  53 | 普洱茶         |          23 |   20.00 | 普洱茶，醇厚回甘                   | https://example.com/ht/greentea5.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  54 | 鸡米花         |          24 |    1.00 | 鸡米花，外酥里嫩                   | https://example.com/ht/snack1.jpg      |      0 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  55 | 薯条           |          24 |   12.00 | 薯条，金黄酥脆                     | https://example.com/ht/snack2.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  56 | 鸡翅           |          24 |   18.00 | 鸡翅，香辣可口                     | https://example.com/ht/snack3.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  57 | 鸡柳           |          24 |   15.00 | 鸡柳，鲜嫩多汁                     | https://example.com/ht/snack4.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  58 | 洋葱圈         |          24 |   10.00 | 洋葱圈，酥脆可口                   | https://example.com/ht/snack5.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-|  59 | 上校鸡块       |          24 |   12.00 | 上校鸡块，经典美味                 | https://example.com/ht/snack6.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
-| 660 | kfc111         |           1 | 1111.00 | 1                                  | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |     NULL | NULL       |
-| 661 | kfc2           |           1 |    2.00 |                                    | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |        1 | NULL       |
-| 663 | 双层吉士堡     |           6 |   12.00 |                                    | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |        2 | NULL       |
-+-----+----------------+-------------+---------+------------------------------------+----------------------------------------+--------+---------------------+---------------------+-------------+-------------+----------+------------+
++-----+----------------+-------------+---------+------------------------------------+----------------------------------------+--------+---------------------+---------------------+-------------+-------------+----------+------------+-------+--------------+
+| id  | name           | category_id | price   | description                        | image                                  | status | create_time         | update_time         | create_user | update_user | store_id | store_name | stock | stock_status |
++-----+----------------+-------------+---------+------------------------------------+----------------------------------------+--------+---------------------+---------------------+-------------+-------------+----------+------------+-------+--------------+
+|   1 | 香辣鸡腿堡     |           1 |   19.00 | 香辣鸡腿堡，外酥里嫩，香辣可口     | https://example.com/kfc/burger1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+|   2 | 奥尔良烤鸡腿堡 |           1 |   20.00 | 奥尔良烤鸡腿堡，鲜嫩多汁           | https://example.com/kfc/burger2.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+|   3 | 原味鸡         |           2 |   12.00 | 原味鸡，经典美味                   | https://example.com/kfc/chicken1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+|   4 | 香辣鸡翅       |           2 |   13.00 | 香辣鸡翅，外酥里嫩                 | https://example.com/kfc/wing1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+|   5 | 薯条（大）     |           3 |   12.00 | 薯条（大），金黄酥脆               | https://example.com/kfc/fries1.jpg     |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+|   6 | 蛋挞           |           3 |    8.00 | 葡式蛋挞，香甜可口                 | https://example.com/kfc/tart1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+|   7 | 可乐           |           4 |    9.00 | 可口可乐，冰爽解渴                 | https://example.com/kfc/coke1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+|   8 | 雪碧           |           4 |    9.00 | 雪碧，清爽怡人                     | https://example.com/kfc/sprite1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+|   9 | 巨无霸         |           6 |   24.00 | 巨无霸，双层牛肉，满足感十足       | https://example.com/mcd/burger1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |   999 |            1 |
+|  10 | 麦辣鸡腿堡     |           6 |   19.00 | 麦辣鸡腿堡，香辣过瘾               | https://example.com/mcd/burger2.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |   999 |            1 |
+|  11 | 麦乐鸡         |           7 |   18.00 | 麦乐鸡，外酥里嫩                   | https://example.com/mcd/nuggets1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |   999 |            1 |
+|  12 | 薯条（中）     |           7 |   10.00 | 薯条（中），金黄酥脆               | https://example.com/mcd/fries1.jpg     |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |   999 |            1 |
+|  13 | 麦旋风         |           8 |   15.00 | 麦旋风，香浓美味                   | https://example.com/mcd/shake1.jpg     |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |   999 |            1 |
+|  14 | 可乐           |           9 |    9.00 | 可口可乐，冰爽解渴                 | https://example.com/mcd/coke1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        2 | NULL       |   999 |            1 |
+|  15 | 拿铁           |          11 |   32.00 | 拿铁，香浓咖啡与丝滑牛奶的完美融合 | https://example.com/sb/latte1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |   999 |            1 |
+|  16 | 美式咖啡       |          11 |   25.00 | 美式咖啡，纯正咖啡香               | https://example.com/sb/americano1.jpg  |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |   999 |            1 |
+|  17 | 卡布奇诺       |          11 |   32.00 | 卡布奇诺，经典意式咖啡             | https://example.com/sb/cappuccino1.jpg |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |   999 |            1 |
+|  18 | 抹茶星冰乐     |          12 |   35.00 | 抹茶星冰乐，清爽冰爽               | https://example.com/sb/matcha1.jpg     |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |   999 |            1 |
+|  19 | 芒果西番莲果茶 |          12 |   30.00 | 芒果西番莲果茶，果香浓郁           | https://example.com/sb/fruittea1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |   999 |            1 |
+|  20 | 芝士蛋糕       |          14 |   28.00 | 芝士蛋糕，香甜可口                 | https://example.com/sb/cake1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |   999 |            1 |
+|  21 | 可颂           |          13 |   18.00 | 可颂，酥脆可口                     | https://example.com/sb/croissant1.jpg  |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        3 | NULL       |   999 |            1 |
+|  22 | 超级至尊披萨   |          16 |   89.00 | 超级至尊披萨，多种配料，丰富美味   | https://example.com/ph/pizza1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |   999 |            1 |
+|  23 | 夏威夷风情披萨 |          16 |   79.00 | 夏威夷风情披萨，清爽果香           | https://example.com/ph/pizza2.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |   999 |            1 |
+|  24 | 意大利肉酱面   |          17 |   45.00 | 意大利肉酱面，经典意式风味         | https://example.com/ph/pasta1.jpg      |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |   999 |            1 |
+|  25 | 奶油蘑菇汤     |          18 |   18.00 | 奶油蘑菇汤，香浓美味               | https://example.com/ph/soup1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |   999 |            1 |
+|  26 | 炸鸡翅         |          18 |   28.00 | 炸鸡翅，外酥里嫩                   | https://example.com/ph/wing1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |   999 |            1 |
+|  27 | 提拉米苏       |          19 |   32.00 | 提拉米苏，经典意式甜点             | https://example.com/ph/tiramisu1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        4 | NULL       |   999 |            1 |
+|  28 | 芝芝莓莓       |          21 |   28.00 | 芝芝莓莓，新鲜草莓与芝士的完美结合 | https://example.com/ht/milktea1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  29 | 多肉葡萄       |          21 |   28.00 | 多肉葡萄，果肉饱满，口感丰富       | https://example.com/ht/milktea2.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  30 | 满杯水果茶     |          22 |   32.00 | 满杯水果茶，多种水果，清爽解渴     | https://example.com/ht/fruittea1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  31 | 满杯红柚茶     |          22 |   28.00 | 满杯红柚茶，清新果香               | https://example.com/ht/fruittea2.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  32 | 纯绿茶         |          23 |   18.00 | 纯绿茶，清香淡雅                   | https://example.com/ht/greentea1.jpg   |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  33 | 珍珠奶茶       |          21 |   22.00 | 珍珠奶茶，经典港式风味             | https://example.com/ht/bobatea1.jpg    |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  34 | 蛋挞           |          24 |   12.00 | 葡式蛋挞，香甜可口                 | https://example.com/ht/tart1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  35 | 蛋糕           |          24 |   18.00 | 蛋糕，松软香甜                     | https://example.com/ht/cake1.jpg       |      1 | 2026-02-13 00:55:47 | 2026-02-13 00:55:47 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  36 | 芝芝芒芒       |          21 |   29.00 | 芝芝芒芒，新鲜芒果与芝士的完美结合 | https://example.com/ht/milktea3.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  37 | 芝芝桃桃       |          21 |   28.00 | 芝芝桃桃，新鲜桃子与芝士的完美结合 | https://example.com/ht/milktea4.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  38 | 黑糖珍珠奶茶   |          21 |   24.00 | 黑糖珍珠奶茶，经典台式风味         | https://example.com/ht/milktea5.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  39 | 抹茶奶茶       |          21 |   26.00 | 抹茶奶茶，日式抹茶风味             | https://example.com/ht/milktea6.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  40 | 焦糖奶茶       |          21 |   24.00 | 焦糖奶茶，香甜可口                 | https://example.com/ht/milktea7.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  41 | 燕麦奶茶       |          21 |   25.00 | 燕麦奶茶，健康营养                 | https://example.com/ht/milktea8.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  42 | 红豆奶茶       |          21 |   23.00 | 红豆奶茶，软糯香甜                 | https://example.com/ht/milktea9.jpg    |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  43 | 芋泥奶茶       |          21 |   25.00 | 芋泥奶茶，细腻绵密                 | https://example.com/ht/milktea10.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  44 | 满杯橙子茶     |          22 |   26.00 | 满杯橙子茶，清新果香               | https://example.com/ht/fruittea3.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  45 | 满杯蓝莓茶     |          22 |   28.00 | 满杯蓝莓茶，抗氧化                 | https://example.com/ht/fruittea4.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  46 | 满杯猕猴桃茶   |          22 |   27.00 | 满杯猕猴桃茶，维C丰富              | https://example.com/ht/fruittea5.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  47 | 满杯菠萝茶     |          22 |   25.00 | 满杯菠萝茶，热带风情               | https://example.com/ht/fruittea6.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  48 | 满杯草莓茶     |          22 |   27.00 | 满杯草莓茶，香甜可口               | https://example.com/ht/fruittea7.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  49 | 满杯西瓜茶     |          22 |   24.00 | 满杯西瓜茶，清爽解渴               | https://example.com/ht/fruittea8.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  50 | 茉莉花茶       |          23 |   16.00 | 茉莉花茶，清香淡雅                 | https://example.com/ht/greentea2.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  51 | 乌龙茶         |          23 |   18.00 | 乌龙茶，香气四溢                   | https://example.com/ht/greentea3.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  52 | 红茶           |          23 |   16.00 | 红茶，醇厚香甜                     | https://example.com/ht/greentea4.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  53 | 普洱茶         |          23 |   20.00 | 普洱茶，醇厚回甘                   | https://example.com/ht/greentea5.jpg   |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  54 | 鸡米花         |          24 |    1.00 | 鸡米花，外酥里嫩                   | https://example.com/ht/snack1.jpg      |      0 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  55 | 薯条           |          24 |   12.00 | 薯条，金黄酥脆                     | https://example.com/ht/snack2.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  56 | 鸡翅           |          24 |   18.00 | 鸡翅，香辣可口                     | https://example.com/ht/snack3.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  57 | 鸡柳           |          24 |   15.00 | 鸡柳，鲜嫩多汁                     | https://example.com/ht/snack4.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  58 | 洋葱圈         |          24 |   10.00 | 洋葱圈，酥脆可口                   | https://example.com/ht/snack5.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+|  59 | 上校鸡块       |          24 |   12.00 | 上校鸡块，经典美味                 | https://example.com/ht/snack6.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+| 660 | kfc111         |           1 | 1111.00 | 1                                  | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |     NULL | NULL       |   999 |            1 |
+| 661 | kfc2           |           1 |    2.00 |                                    | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+| 663 | 双层吉士堡     |           6 |   12.00 |                                    | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |        2 | NULL       |   999 |            1 |
++-----+----------------+-------------+---------+------------------------------------+----------------------------------------+--------+---------------------+---------------------+-------------+-------------+----------+------------+-------+--------------+
 62 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `employee`;
@@ -729,15 +734,15 @@ mysql> SELECT * FROM `setmeal_dish`;
 12 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `setmeal`;
-+-----+-------------+--------------------------+--------+--------+-------------+--------------------------------------+-------------+-------------+-------------+-------------+----------+------------+
-| id  | category_id | name                     | price  | status | description | image                                | create_time | update_time | create_user | update_user | store_id | store_name |
-+-----+-------------+--------------------------+--------+--------+-------------+--------------------------------------+-------------+-------------+-------------+-------------+----------+------------+
-| 164 | 1           | 两个原味鸡               |   9.90 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        1 | NULL       |
-| 165 | 10          | 1+1随心选                |  13.90 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        2 | NULL       |
-| 166 | 11          | 套餐                     |  20.00 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        3 | NULL       |
-| 168 | 20          | 联动                     |   9.90 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        5 | NULL       |
-| 169 | 15          | 无上至尊豪华皇帝披萨套餐 | 888.00 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        4 | NULL       |
-+-----+-------------+--------------------------+--------+--------+-------------+--------------------------------------+-------------+-------------+-------------+-------------+----------+------------+
++-----+-------------+--------------------------+--------+--------+-------------+--------------------------------------+-------------+-------------+-------------+-------------+----------+------------+-------+--------------+
+| id  | category_id | name                     | price  | status | description | image                                | create_time | update_time | create_user | update_user | store_id | store_name | stock | stock_status |
++-----+-------------+--------------------------+--------+--------+-------------+--------------------------------------+-------------+-------------+-------------+-------------+----------+------------+-------+--------------+
+| 164 | 1           | 两个原味鸡               |   9.90 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        1 | NULL       |   999 |            1 |
+| 165 | 10          | 1+1随心选                |  13.90 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        2 | NULL       |   999 |            1 |
+| 166 | 11          | 套餐                     |  20.00 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        3 | NULL       |   999 |            1 |
+| 168 | 20          | 联动                     |   9.90 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        5 | NULL       |   999 |            1 |
+| 169 | 15          | 无上至尊豪华皇帝披萨套餐 | 888.00 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        4 | NULL       |   999 |            1 |
++-----+-------------+--------------------------+--------+--------+-------------+--------------------------------------+-------------+-------------+-------------+-------------+----------+------------+-------+--------------+
 5 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `shopping_cart`;
