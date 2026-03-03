@@ -96,21 +96,140 @@ public class SetmealController {
     }
 
     /**
-     * 修改套餐信息
-     * @param setmeal 套餐信息
+     * 修改套餐信息（包含套餐菜品）
+     * @param setmealData 套餐信息（包含setmealDishes）
      * @return 修改结果
      */
     @PutMapping
-    public R<String> update(@RequestBody Setmeal setmeal) {
-        log.info("修改套餐信息：setmeal={}", setmeal);
+    public R<String> update(@RequestBody Map<String, Object> setmealData) {
+        log.info("修改套餐信息：setmealData={}", setmealData);
 
-        // 更新套餐
-        boolean result = setmealService.updateById(setmeal);
+        try {
+            // 提取套餐ID
+            Object idObj = setmealData.get("id");
+            Long id = null;
+            if (idObj instanceof Integer) {
+                id = ((Integer) idObj).longValue();
+            } else if (idObj instanceof Long) {
+                id = (Long) idObj;
+            } else if (idObj != null) {
+                id = Long.parseLong(idObj.toString());
+            }
 
-        if (result) {
-            return R.success("修改成功");
-        } else {
-            return R.error("修改失败");
+            if (id == null) {
+                return R.error("套餐ID不能为空");
+            }
+
+            // 查询现有套餐
+            Setmeal existingSetmeal = setmealService.getById(id);
+            if (existingSetmeal == null) {
+                return R.error("套餐不存在");
+            }
+
+            // 更新套餐基本信息
+            Setmeal setmeal = new Setmeal();
+            setmeal.setId(id);
+            setmeal.setName((String) setmealData.get("name"));
+
+            // 处理categoryId，支持数字和字符串类型
+            Object categoryIdObj = setmealData.get("categoryId");
+            if (categoryIdObj != null) {
+                if (categoryIdObj instanceof Integer) {
+                    setmeal.setCategoryId(categoryIdObj.toString());
+                } else {
+                    setmeal.setCategoryId((String) categoryIdObj);
+                }
+            }
+
+            // 处理price，支持数字和字符串类型
+            Object priceObj = setmealData.get("price");
+            if (priceObj != null) {
+                if (priceObj instanceof Number) {
+                    setmeal.setPrice(new BigDecimal(priceObj.toString()));
+                } else {
+                    setmeal.setPrice(new BigDecimal(priceObj.toString()));
+                }
+            }
+
+            setmeal.setDescription((String) setmealData.get("description"));
+            setmeal.setImage((String) setmealData.get("image"));
+
+            // 处理status，支持数字和字符串类型
+            Object statusObj = setmealData.get("status");
+            if (statusObj != null) {
+                if (statusObj instanceof Integer) {
+                    setmeal.setStatus((Integer) statusObj);
+                } else {
+                    setmeal.setStatus(Integer.parseInt(statusObj.toString()));
+                }
+            }
+
+            // 保留原有的storeId和storeName
+            setmeal.setStoreId(existingSetmeal.getStoreId());
+            setmeal.setStoreName(existingSetmeal.getStoreName());
+
+            // 更新套餐
+            boolean result = setmealService.updateById(setmeal);
+
+            if (result) {
+                // 处理套餐菜品
+                List<Map<String, Object>> setmealDishes = (List<Map<String, Object>>) setmealData.get("setmealDishes");
+                if (setmealDishes != null) {
+                    // 删除原有的套餐菜品
+                    LambdaQueryWrapper<SetmealDish> deleteWrapper = new LambdaQueryWrapper<>();
+                    deleteWrapper.eq(SetmealDish::getSetmealId, id);
+                    setmealDishService.remove(deleteWrapper);
+
+                    // 添加新的套餐菜品
+                    for (Map<String, Object> dish : setmealDishes) {
+                        SetmealDish setmealDish = new SetmealDish();
+                        setmealDish.setSetmealId(id);
+
+                        // 处理dishId，支持数字和字符串类型
+                        Object dishIdObj = dish.get("dishId");
+                        if (dishIdObj != null) {
+                            if (dishIdObj instanceof Long) {
+                                setmealDish.setDishId((Long) dishIdObj);
+                            } else if (dishIdObj instanceof Integer) {
+                                setmealDish.setDishId(((Integer) dishIdObj).longValue());
+                            } else {
+                                setmealDish.setDishId(Long.parseLong(dishIdObj.toString()));
+                            }
+                        }
+
+                        setmealDish.setName((String) dish.get("name"));
+
+                        // 处理price，支持数字和字符串类型
+                        Object dishPriceObj = dish.get("price");
+                        if (dishPriceObj != null) {
+                            if (dishPriceObj instanceof Number) {
+                                setmealDish.setPrice(new BigDecimal(dishPriceObj.toString()));
+                            } else {
+                                setmealDish.setPrice(new BigDecimal(dishPriceObj.toString()));
+                            }
+                        }
+
+                        // 处理copies，支持数字和字符串类型
+                        Object copiesObj = dish.get("copies");
+                        if (copiesObj != null) {
+                            if (copiesObj instanceof Integer) {
+                                setmealDish.setCopies((Integer) copiesObj);
+                            } else {
+                                setmealDish.setCopies(Integer.parseInt(copiesObj.toString()));
+                            }
+                        }
+
+                        setmealDishService.save(setmealDish);
+                    }
+                }
+
+                return R.success("修改成功");
+            } else {
+                return R.error("修改失败");
+            }
+        } catch (Exception e) {
+            log.error("修改套餐失败：", e);
+            return R.error("修改失败：" + e.getMessage());
         }
     }
 
