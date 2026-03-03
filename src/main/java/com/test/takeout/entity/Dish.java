@@ -88,4 +88,14 @@ public class Dish implements Serializable {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateUser;
 
+    /**
+     * 库存数量
+     */
+    private Integer stock;
+
+    /**
+     * 库存状态（0-售罄，1-充足，2-紧张）
+     */
+    private Integer stockStatus;
+
 }

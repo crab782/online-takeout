@@ -222,4 +222,50 @@ public class DishController {
         return R.success(dishList);
     }
 
+    /**
+     * 修改菜品库存
+     * @param params 包含菜品ID和库存数量的参数
+     * @return 修改结果
+     */
+    @PutMapping("/stock")
+    public R<String> updateDishStock(@RequestBody Map<String, Object> params) {
+        log.info("修改菜品库存：params={}", params);
+
+        try {
+            Long dishId = Long.parseLong(params.get("id").toString());
+            Integer stock = Integer.parseInt(params.get("stock").toString());
+
+            if (stock < 0) {
+                return R.error("库存数量不能为负数");
+            }
+
+            Dish dish = dishService.getById(dishId);
+            if (dish == null) {
+                return R.error("菜品不存在");
+            }
+
+            // 更新库存
+            dish.setStock(stock);
+            // 自动计算库存状态
+            if (stock <= 0) {
+                dish.setStockStatus(0); // 售罄
+            } else if (stock <= 10) {
+                dish.setStockStatus(2); // 紧张
+            } else {
+                dish.setStockStatus(1); // 充足
+            }
+
+            boolean success = dishService.updateById(dish);
+            if (success) {
+                log.info("菜品库存修改成功：dishId={}, stock={}", dishId, stock);
+                return R.success("库存修改成功");
+            } else {
+                return R.error("库存修改失败");
+            }
+        } catch (Exception e) {
+            log.error("修改菜品库存失败：", e);
+            return R.error("修改库存失败：" + e.getMessage());
+        }
+    }
+
 }
