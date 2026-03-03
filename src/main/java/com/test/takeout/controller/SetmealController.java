@@ -223,19 +223,38 @@ public class SetmealController {
     }
 
     /**
-     * 根据ID查询套餐详情
+     * 根据ID查询套餐详情（包含套餐菜品）
      * @param id 套餐ID
-     * @return 套餐详情
+     * @return 套餐详情（包含套餐菜品列表）
      */
     @GetMapping("/{id}")
-    public R<Setmeal> getById(@PathVariable Long id) {
+    public R<Map<String, Object>> getById(@PathVariable Long id) {
         log.info("根据ID查询套餐详情：id={}", id);
 
         // 根据ID查询套餐
         Setmeal setmeal = setmealService.getById(id);
 
         if (setmeal != null) {
-            return R.success(setmeal);
+            // 查询套餐包含的菜品
+            LambdaQueryWrapper<SetmealDish> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(SetmealDish::getSetmealId, id);
+            queryWrapper.orderByAsc(SetmealDish::getSort);
+            List<SetmealDish> setmealDishes = setmealDishService.list(queryWrapper);
+
+            // 构建响应数据
+            Map<String, Object> data = new HashMap<>();
+            data.put("id", setmeal.getId());
+            data.put("categoryId", setmeal.getCategoryId());
+            data.put("name", setmeal.getName());
+            data.put("price", setmeal.getPrice());
+            data.put("status", setmeal.getStatus());
+            data.put("description", setmeal.getDescription());
+            data.put("image", setmeal.getImage());
+            data.put("storeId", setmeal.getStoreId());
+            data.put("storeName", setmeal.getStoreName());
+            data.put("setmealDishes", setmealDishes);
+
+            return R.success(data);
         } else {
             return R.error("套餐不存在");
         }
