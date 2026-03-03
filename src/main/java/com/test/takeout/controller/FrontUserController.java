@@ -176,7 +176,7 @@ public class FrontUserController {
      */
     @PostMapping("/password")
     public R<String> changePassword(HttpServletRequest request, @RequestBody Map<String, String> passwordData) {
-        log.info("修改用户密码：passwordData={}", passwordData);
+        log.info("修改用户密码");
 
         Long userId = (Long) request.getAttribute("userId");
         if (userId == null) {
@@ -195,6 +195,10 @@ public class FrontUserController {
             return R.error("新密码不能为空");
         }
 
+        if (newPassword.length() < 6 || newPassword.length() > 20) {
+            return R.error("新密码长度需为6-20个字符");
+        }
+
         if (confirmPassword == null || confirmPassword.isEmpty()) {
             return R.error("确认密码不能为空");
         }
@@ -208,11 +212,19 @@ public class FrontUserController {
             return R.error("用户不存在");
         }
 
-        if (!user.getPassword().equals(oldPassword)) {
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder = 
+            new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             return R.error("原密码错误");
         }
 
-        user.setPassword(newPassword);
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            return R.error("新密码不能与原密码相同");
+        }
+
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
         user.setUpdateTime(LocalDateTime.now());
 
         boolean success = userService.updateById(user);
@@ -230,7 +242,7 @@ public class FrontUserController {
      * @return 更新结果
      */
     @PostMapping("/update")
-    public R<String> updateUserInfo(HttpServletRequest request, @RequestBody Map<String, String> userData) {
+    public R<User> updateUserInfo(HttpServletRequest request, @RequestBody Map<String, Object> userData) {
         log.info("更新用户信息：userData={}", userData);
 
         Long userId = (Long) request.getAttribute("userId");
@@ -243,12 +255,30 @@ public class FrontUserController {
             return R.error("用户不存在");
         }
 
-        String username = userData.get("username");
-        String email = userData.get("email");
-        String avatar = userData.get("avatar");
+        String username = (String) userData.get("username");
+        String name = (String) userData.get("name");
+        String phone = (String) userData.get("phone");
+        String email = (String) userData.get("email");
+        String avatar = (String) userData.get("avatar");
+        Object sexObj = userData.get("sex");
 
         if (username != null && !username.isEmpty()) {
             user.setUsername(username);
+        }
+
+        if (name != null) {
+            user.setName(name);
+        }
+
+        if (phone != null && !phone.isEmpty()) {
+            LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(User::getPhone, phone);
+            queryWrapper.ne(User::getId, userId);
+            User existingUser = userService.getOne(queryWrapper);
+            if (existingUser != null) {
+                return R.error("该手机号已被其他用户使用");
+            }
+            user.setPhone(phone);
         }
 
         if (email != null && !email.isEmpty()) {
@@ -259,11 +289,29 @@ public class FrontUserController {
             user.setAvatar(avatar);
         }
 
+        if (sexObj != null) {
+            Integer sex = null;
+            if (sexObj instanceof Integer) {
+                sex = (Integer) sexObj;
+            } else if (sexObj instanceof String) {
+                String sexStr = (String) sexObj;
+                if ("男".equals(sexStr)) {
+                    sex = 1;
+                } else if ("女".equals(sexStr)) {
+                    sex = 0;
+                } else {
+                    sex = 2;
+                }
+            }
+            user.setSex(sex);
+        }
+
         user.setUpdateTime(LocalDateTime.now());
 
         boolean success = userService.updateById(user);
         if (success) {
-            return R.success("更新成功");
+            user.setPassword(null);
+            return R.success(user);
         } else {
             return R.error("更新失败");
         }
