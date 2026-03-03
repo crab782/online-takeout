@@ -51,21 +51,8 @@ public class DishController {
         
         // 处理店铺ID参数
         if (shopId != null) {
-            // 先查询该店铺下的所有分类ID
-            LambdaQueryWrapper<Category> categoryQueryWrapper = new LambdaQueryWrapper<>();
-            categoryQueryWrapper.eq(Category::getStoreId, shopId);
-            categoryQueryWrapper.eq(Category::getStatus, 1); // 只查询启用状态的分类
-            List<Category> categories = categoryService.list(categoryQueryWrapper);
-            
-            if (categories != null && !categories.isEmpty()) {
-                // 提取分类ID列表
-                List<Long> categoryIds = categories.stream().map(Category::getId).collect(java.util.stream.Collectors.toList());
-                // 根据分类ID列表查询菜品
-                queryWrapper.in(Dish::getCategoryId, categoryIds);
-            } else {
-                // 如果店铺下没有分类，返回空列表
-                return R.success(pageInfo);
-            }
+            // 直接查询该店铺下的所有菜品，包括未分类的菜品
+            queryWrapper.eq(Dish::getStoreId, shopId);
         }
         
         // 按照更新时间倒序排列
@@ -212,10 +199,8 @@ public class DishController {
             } catch (NumberFormatException e) {
                 log.error("类型参数格式错误：{}", params.get("type"));
             }
-        } else {
-            // 默认只查询起售状态的菜品
-            queryWrapper.eq(Dish::getStatus, 1);
         }
+        // 移除默认状态查询，允许查询所有状态的菜品
         
         // 处理排序参数
         if (params.containsKey("sortBy")) {
