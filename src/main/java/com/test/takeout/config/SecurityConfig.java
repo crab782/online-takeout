@@ -6,11 +6,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.util.List;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * Spring Security配置类
@@ -22,39 +25,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 禁用CSRF保护（开发环境）
+            // 禁用CSRF保护
             .csrf(AbstractHttpConfigurer::disable)
             
-            // 配置CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // 禁用CORS限制（由代理处理）
+            .cors(AbstractHttpConfigurer::disable)
             
-            // 配置请求授权规则
+            // 允许所有请求
             .authorizeRequests(authorize -> authorize
-                // 允许匿名访问的接口
-                .requestMatchers("/user/login").permitAll()
-                .requestMatchers("/user/register").permitAll()
-                .requestMatchers("/user/code").permitAll()
-                .requestMatchers("/user/updatePassword").permitAll()
-                .requestMatchers("/user/info").permitAll()
-                .requestMatchers("/user/loginout").permitAll()
-                .requestMatchers("/backend/user/info").permitAll()
-                .requestMatchers("/backend/user/logout").permitAll()
-                .requestMatchers("/employee/login").permitAll()
-                .requestMatchers("/employee/logout").permitAll()
-                .requestMatchers("/store/**").permitAll()
-                .requestMatchers("/category/**").permitAll()
-                .requestMatchers("/dish/**").permitAll()
-                .requestMatchers("/setmeal/**").permitAll()
-                .requestMatchers("/activity/**").permitAll()
-                .requestMatchers("/shoppingCart/**").permitAll()
-                .requestMatchers("/order/**").permitAll()
-                .requestMatchers("/addressBook/**").permitAll()
-                .requestMatchers("/common/**").permitAll()
-                .requestMatchers("/api/**").permitAll()
-                .requestMatchers("/error").permitAll()
-                .requestMatchers("/test/**").permitAll()
-                
-                // 其他所有请求需要认证
                 .anyRequest().permitAll()
             )
             
@@ -62,39 +40,35 @@ public class SecurityConfig {
             .formLogin(AbstractHttpConfigurer::disable)
             
             // 禁用HTTP基本认证
-            .httpBasic(AbstractHttpConfigurer::disable);
+            .httpBasic(AbstractHttpConfigurer::disable)
+            
+            // 添加CORS过滤器
+            .addFilterBefore(new CorsFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
-     * CORS配置
+     * 简单的CORS过滤器
      */
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        
-        // 允许的来源
-        configuration.setAllowedOrigins(List.of("http://localhost:8080"));
-        
-        // 允许的HTTP方法
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        
-        // 允许的请求头
-        configuration.setAllowedHeaders(List.of(
-            "Origin", "Content-Type", "Accept", "Authorization",
-            "X-Requested-With", "Access-Control-Allow-Origin"
-        ));
-        
-        // 允许携带凭证
-        configuration.setAllowCredentials(true);
-        
-        // 预检请求的有效期
-        configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        
-        return source;
+    public static class CorsFilter extends OncePerRequestFilter {
+        @Override
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
+                                        FilterChain filterChain) throws ServletException, IOException {
+            // 设置CORS头
+            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            response.setHeader("Access-Control-Allow-Headers", "*");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Access-Control-Max-Age", "3600");
+            
+            // 对于OPTIONS预检请求，直接返回200
+            if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                response.setStatus(HttpServletResponse.SC_OK);
+                return;
+            }
+            
+            filterChain.doFilter(request, response);
+        }
     }
 }
