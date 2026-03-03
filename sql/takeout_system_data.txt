@@ -1,3 +1,28 @@
+mysql> show tables;
++--------------------------+
+| Tables_in_takeout_system |
++--------------------------+
+| activity                 |
+| address_book             |
+| category                 |
+| comment                  |
+| dish                     |
+| employee                 |
+| order_detail             |
+| orders                   |
+| setmeal                  |
+| setmeal_dish             |
+| shopping_cart            |
+| store                    |
+| store_balance            |
+| store_favorite           |
+| store_withdrawal_account |
+| user                     |
+| user_checkin             |
+| withdrawal_record        |
++--------------------------+
+18 rows in set (0.00 sec)
+
 mysql> DESC `activity`;
 +-------------+--------------+------+-----+-------------------+-----------------------------------------------+
 | Field       | Type         | Null | Key | Default           | Extra                                         |
@@ -13,7 +38,7 @@ mysql> DESC `activity`;
 | create_time | datetime     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
 | update_time | datetime     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
 +-------------+--------------+------+-----+-------------------+-----------------------------------------------+
-10 rows in set (0.01 sec)
+10 rows in set (0.00 sec)
 
 mysql> DESC `address_book`;
 +---------------+--------------+------+-----+-------------------+-----------------------------------------------+
@@ -37,7 +62,7 @@ mysql> DESC `address_book`;
 | create_time   | datetime     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
 | update_time   | datetime     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
 +---------------+--------------+------+-----+-------------------+-----------------------------------------------+
-17 rows in set (0.01 sec)
+17 rows in set (0.00 sec)
 
 mysql> DESC `category`;
 +-------------+-------------+------+-----+-------------------+-----------------------------------------------+
@@ -114,7 +139,7 @@ mysql> DESC `employee`;
 | created_at | datetime     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
 | updated_at | datetime     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
 +------------+--------------+------+-----+-------------------+-----------------------------------------------+
-11 rows in set (0.01 sec)
+11 rows in set (0.00 sec)
 
 mysql> DESC `order_detail`;
 +------------+---------------+------+-----+---------+----------------+
@@ -328,7 +353,7 @@ mysql> SELECT * FROM `activity`;
 |  2 | 限时秒杀       | 每日10点限时秒杀，低至5折 | https://example.com/activity2.jpg |      1 |        1 | 2026-01-01 00:00:00 | 2026-12-31 23:59:59 | 2026-02-13 00:55:47 | 2026-02-20 21:05:07 |
 |  3 | 满减活动       | 满100减20，满200减50      | https://example.com/activity3.jpg |      1 |        1 | 2026-01-01 00:00:00 | 2026-12-31 23:59:59 | 2026-02-13 00:55:47 | 2026-02-20 21:05:07 |
 +----+----------------+---------------------------+-----------------------------------+--------+----------+---------------------+---------------------+---------------------+---------------------+
-3 rows in set (0.01 sec)
+3 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `address_book`;
 +----+---------+----------+-----------+-------------+------+---------------+---------------+-----------+-----------+---------------+---------------+--------------------------------+-------+------------+---------------------+---------------------+
@@ -339,7 +364,7 @@ mysql> SELECT * FROM `address_book`;
 |  3 |       2 |     NULL | 李四      | 13900139002 | NULL | 310000        | NULL          | NULL      | 上海市    | 310101        | NULL          | test2路                        | NULL  |          1 | 2026-02-24 11:44:29 | 2026-02-24 11:44:29 |
 |  4 |       3 |     NULL | 王五      | 13900139003 | NULL | 440000        | NULL          | NULL      | 广州市    | 440118        | NULL          | test3大道test3街test3号test3户 | NULL  |          1 | 2026-02-24 14:30:03 | 2026-02-24 14:30:03 |
 +----+---------+----------+-----------+-------------+------+---------------+---------------+-----------+-----------+---------------+---------------+--------------------------------+-------+------------+---------------------+---------------------+
-4 rows in set (0.01 sec)
+4 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `category`;
 +----+----------+------+------+--------+---------------------+---------------------+-------------+-------------+----------+
@@ -440,7 +465,7 @@ mysql> SELECT * FROM `dish`;
 |  59 | 上校鸡块       |          24 |   12.00 | 上校鸡块，经典美味                 | https://example.com/ht/snack6.jpg      |      1 | 2026-02-20 16:59:38 | 2026-02-20 16:59:38 |        NULL |        NULL |        5 | NULL       |
 | 660 | kfc111         |           1 | 1111.00 | 1                                  | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |     NULL | NULL       |
 | 661 | kfc2           |           1 |    2.00 |                                    | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |        1 | NULL       |
-| 662 | kfctaocan2     |           1 |  177.00 |                                    | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |        1 | NULL       |
+| 663 | 双层吉士堡     |           6 |   12.00 |                                    | https://example.com/ht/greentea3.jpg   |      1 | NULL                | NULL                |        NULL |        NULL |        2 | NULL       |
 +-----+----------------+-------------+---------+------------------------------------+----------------------------------------+--------+---------------------+---------------------+-------------+-------------+----------+------------+
 62 rows in set (0.00 sec)
 
@@ -458,164 +483,165 @@ mysql> SELECT * FROM `employee`;
 6 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `order_detail`;
-+-----+----------------+----------+---------+------------+--------+--------+----------------------------------------+
-| id  | name           | order_id | dish_id | setmeal_id | number | amount | image                                  |
-+-----+----------------+----------+---------+------------+--------+--------+----------------------------------------+
-|   1 | 香辣鸡腿堡     |        1 |       1 |       NULL |      1 |  19.00 | NULL                                   |
-|   2 | 薯条（大）     |        1 |       5 |       NULL |      1 |  12.00 | NULL                                   |
-|   3 | 可乐           |        1 |       7 |       NULL |      1 |   9.00 | NULL                                   |
-|   4 | 巨无霸         |        2 |       9 |       NULL |      1 |  24.00 | NULL                                   |
-|   5 | 薯条（中）     |        2 |      11 |       NULL |      1 |  10.00 | NULL                                   |
-|   6 | 可乐           |        2 |      14 |       NULL |      1 |   9.00 | NULL                                   |
-|   7 | 拿铁           |        3 |      15 |       NULL |      1 |  32.00 | NULL                                   |
-|   8 | 超级至尊披萨   |        4 |      22 |       NULL |      1 |  89.00 | NULL                                   |
-|   9 | 芝芝莓莓       |        5 |      29 |       NULL |      2 |  56.00 | NULL                                   |
-|  10 | 香辣鸡腿堡     |        6 |       1 |       NULL |      2 |  38.00 | NULL                                   |
-|  11 | 奥尔良烤鸡腿堡 |        6 |       2 |       NULL |      1 |  20.00 | NULL                                   |
-|  12 | 可乐           |        6 |       7 |       NULL |      2 |  18.00 | NULL                                   |
-|  13 | 麦辣鸡腿堡     |        7 |      10 |       NULL |      2 |  38.00 | NULL                                   |
-|  14 | 薯条（中）     |        7 |      11 |       NULL |      1 |  10.00 | NULL                                   |
-|  15 | 可乐           |        7 |      14 |       NULL |      1 |   9.00 | NULL                                   |
-|  16 | 拿铁           |        8 |      15 |       NULL |      2 |  64.00 | NULL                                   |
-|  17 | 多肉葡萄       |        9 |      30 |       NULL |      1 |  28.00 | NULL                                   |
-|  18 | 珍珠奶茶       |        9 |      34 |       NULL |      1 |  22.00 | NULL                                   |
-|  19 | 夏威夷风情披萨 |       10 |      23 |       NULL |      1 |  79.00 | NULL                                   |
-|  20 | 香辣鸡腿堡     |       11 |       1 |       NULL |      1 |  19.00 | NULL                                   |
-|  21 | 原味鸡         |       11 |       3 |       NULL |      1 |  12.00 | NULL                                   |
-|  22 | 可乐           |       11 |       7 |       NULL |      1 |   9.00 | NULL                                   |
-|  23 | 拿铁           |       12 |      15 |       NULL |      1 |  32.00 | NULL                                   |
-|  24 | 可颂           |       12 |      20 |       NULL |      1 |  18.00 | NULL                                   |
-|  25 | 芝芝莓莓       |       13 |      29 |       NULL |      2 |  56.00 | NULL                                   |
-|  26 | 超级至尊披萨   |       14 |      22 |       NULL |      1 |  89.00 | NULL                                   |
-|  27 | 意大利肉酱面   |       14 |      24 |       NULL |      1 |  45.00 | NULL                                   |
-|  28 | 巨无霸         |       15 |       9 |       NULL |      2 |  48.00 | NULL                                   |
-|  29 | 可乐           |       15 |      14 |       NULL |      1 |   9.00 | NULL                                   |
-|  30 | 奥尔良烤鸡腿堡 |       16 |       2 |       NULL |      1 |  20.00 | NULL                                   |
-|  31 | 香辣鸡翅       |       16 |       4 |       NULL |      1 |  13.00 | NULL                                   |
-|  32 | 芝芝莓莓       |       17 |      29 |       NULL |      1 |  28.00 | NULL                                   |
-|  33 | 拿铁           |       18 |      15 |       NULL |      1 |  32.00 | NULL                                   |
-|  34 | 可颂           |       18 |      20 |       NULL |      1 |  18.00 | NULL                                   |
-|  35 | 巨无霸         |       19 |       9 |       NULL |      1 |  24.00 | NULL                                   |
-|  36 | 薯条（中）     |       19 |      11 |       NULL |      1 |  10.00 | NULL                                   |
-|  37 | 可乐           |       19 |      14 |       NULL |      1 |   9.00 | NULL                                   |
-|  38 | 夏威夷风情披萨 |       20 |      23 |       NULL |      1 |  79.00 | NULL                                   |
-|  39 | 香辣鸡腿堡     |       21 |       1 |       NULL |      1 |  19.00 | NULL                                   |
-|  40 | 原味鸡         |       21 |       3 |       NULL |      1 |  12.00 | NULL                                   |
-|  41 | 可乐           |       21 |       7 |       NULL |      1 |   9.00 | NULL                                   |
-|  42 | 满杯水果茶     |       22 |      31 |       NULL |      1 |  32.00 | NULL                                   |
-|  43 | 珍珠奶茶       |       22 |      34 |       NULL |      1 |  22.00 | NULL                                   |
-|  44 | 拿铁           |       23 |      15 |       NULL |      1 |  32.00 | NULL                                   |
-|  45 | 巨无霸         |       24 |       9 |       NULL |      2 |  48.00 | NULL                                   |
-|  46 | 可乐           |       24 |      14 |       NULL |      1 |   9.00 | NULL                                   |
-|  47 | 夏威夷风情披萨 |       25 |      23 |       NULL |      1 |  79.00 | NULL                                   |
-|  48 | 香辣鸡腿堡     |       26 |       1 |       NULL |      1 |  19.00 | NULL                                   |
-|  49 | 薯条（大）     |       26 |       5 |       NULL |      1 |  12.00 | NULL                                   |
-|  50 | 可乐           |       26 |       7 |       NULL |      1 |   9.00 | NULL                                   |
-|  51 | 拿铁           |       27 |      15 |       NULL |      1 |  32.00 | NULL                                   |
-|  52 | 可颂           |       27 |      20 |       NULL |      1 |  18.00 | NULL                                   |
-|  53 | 芝芝莓莓       |       28 |      29 |       NULL |      2 |  56.00 | NULL                                   |
-|  54 | 巨无霸         |       29 |       9 |       NULL |      1 |  24.00 | NULL                                   |
-|  55 | 薯条（中）     |       29 |      11 |       NULL |      1 |  10.00 | NULL                                   |
-|  56 | 可乐           |       29 |      14 |       NULL |      1 |   9.00 | NULL                                   |
-|  57 | 超级至尊披萨   |       30 |      22 |       NULL |      1 |  89.00 | NULL                                   |
-|  58 | 意大利肉酱面   |       30 |      24 |       NULL |      1 |  45.00 | NULL                                   |
-|  59 | 香辣鸡腿堡     |       31 |       1 |       NULL |      1 |  19.00 | NULL                                   |
-|  60 | 原味鸡         |       31 |       3 |       NULL |      1 |  12.00 | NULL                                   |
-|  61 | 可乐           |       31 |       7 |       NULL |      1 |   9.00 | NULL                                   |
-|  62 | 多肉葡萄       |       32 |      30 |       NULL |      1 |  28.00 | NULL                                   |
-|  63 | 珍珠奶茶       |       32 |      34 |       NULL |      1 |  22.00 | NULL                                   |
-|  64 | 拿铁           |       33 |      15 |       NULL |      1 |  32.00 | NULL                                   |
-|  65 | 巨无霸         |       34 |       9 |       NULL |      2 |  48.00 | NULL                                   |
-|  66 | 可乐           |       34 |      14 |       NULL |      1 |   9.00 | NULL                                   |
-|  67 | 夏威夷风情披萨 |       35 |      23 |       NULL |      1 |  79.00 | NULL                                   |
-|  68 | 茉莉花茶       |       36 |    NULL |       NULL |      1 |   NULL | https://example.com/ht/greentea2.jpg   |
-|  69 | 巨无霸         |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/burger1.jpg    |
-|  70 | 麦辣鸡腿堡     |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/burger2.jpg    |
-|  71 | 麦乐鸡         |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/nuggets1.jpg   |
-|  72 | 薯条（中）     |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/fries1.jpg     |
-|  73 | 麦旋风         |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/shake1.jpg     |
-|  74 | 可乐           |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/coke1.jpg      |
-|  75 | 超级至尊披萨   |       38 |      22 |       NULL |      1 |  89.00 | https://example.com/ph/pizza1.jpg      |
-|  76 | 可颂           |       39 |      21 |       NULL |      1 |  18.00 | https://example.com/sb/croissant1.jpg  |
-|  77 | 美式咖啡       |       39 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
-|  78 | 芝士蛋糕       |       39 |      20 |       NULL |      1 |  28.00 | https://example.com/sb/cake1.jpg       |
-|  79 | 芒果西番莲果茶 |       39 |      19 |       NULL |      1 |  30.00 | https://example.com/sb/fruittea1.jpg   |
-|  80 | 拿铁           |       39 |      15 |       NULL |      1 |  32.00 | https://example.com/sb/latte1.jpg      |
-|  81 | 卡布奇诺       |       39 |      17 |       NULL |      1 |  32.00 | https://example.com/sb/cappuccino1.jpg |
-|  82 | 抹茶星冰乐     |       39 |      18 |       NULL |      1 |  35.00 | https://example.com/sb/matcha1.jpg     |
-|  83 | 芝士蛋糕       |       40 |      20 |       NULL |      1 |  28.00 | https://example.com/sb/cake1.jpg       |
-|  84 | 可颂           |       41 |      21 |       NULL |      2 |  18.00 | https://example.com/sb/croissant1.jpg  |
-|  85 | 美式咖啡       |       41 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
-|  86 | 芝士蛋糕       |       41 |      20 |       NULL |      1 |  28.00 | https://example.com/sb/cake1.jpg       |
-|  87 | 芒果西番莲果茶 |       41 |      19 |       NULL |      1 |  30.00 | https://example.com/sb/fruittea1.jpg   |
-|  88 | 拿铁           |       41 |      15 |       NULL |      1 |  32.00 | https://example.com/sb/latte1.jpg      |
-|  89 | 卡布奇诺       |       41 |      17 |       NULL |      1 |  32.00 | https://example.com/sb/cappuccino1.jpg |
-|  90 | 抹茶星冰乐     |       41 |      18 |       NULL |      1 |  35.00 | https://example.com/sb/matcha1.jpg     |
-|  91 | 拿铁           |       42 |      15 |       NULL |      2 |  32.00 | https://example.com/sb/latte1.jpg      |
-|  92 | 芒果西番莲果茶 |       42 |      19 |       NULL |      5 |  30.00 | https://example.com/sb/fruittea1.jpg   |
-|  93 | 美式咖啡       |       43 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
-|  94 | 可颂           |       44 |      21 |       NULL |      1 |  18.00 | https://example.com/sb/croissant1.jpg  |
-|  95 | 美式咖啡       |       44 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
-|  96 | 卡布奇诺       |       44 |      17 |       NULL |      1 |  32.00 | https://example.com/sb/cappuccino1.jpg |
-|  97 | 抹茶星冰乐     |       44 |      18 |       NULL |      1 |  35.00 | https://example.com/sb/matcha1.jpg     |
-|  98 | 可颂           |       45 |      21 |       NULL |      1 |  18.00 | https://example.com/sb/croissant1.jpg  |
-|  99 | 美式咖啡       |       45 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
-| 100 | 芝士蛋糕       |       45 |      20 |       NULL |      1 |  28.00 | https://example.com/sb/cake1.jpg       |
-| 101 | 芒果西番莲果茶 |       45 |      19 |       NULL |      1 |  30.00 | https://example.com/sb/fruittea1.jpg   |
-| 102 | 卡布奇诺       |       45 |      17 |       NULL |      1 |  32.00 | https://example.com/sb/cappuccino1.jpg |
-| 103 | 蛋挞           |       46 |       6 |       NULL |      1 |   8.00 | https://example.com/kfc/tart1.jpg      |
-| 104 | 巨无霸         |       47 |       9 |       NULL |      1 |  24.00 | https://example.com/mcd/burger1.jpg    |
-| 105 | 麦辣鸡腿堡     |       47 |      10 |       NULL |      1 |  19.00 | https://example.com/mcd/burger2.jpg    |
-| 106 | 麦乐鸡         |       48 |      11 |       NULL |      1 |  18.00 | https://example.com/mcd/nuggets1.jpg   |
-| 107 | 巨无霸         |       48 |       9 |       NULL |      1 |  24.00 | https://example.com/mcd/burger1.jpg    |
-| 108 | 麦旋风         |       49 |      13 |       NULL |      1 |  15.00 | https://example.com/mcd/shake1.jpg     |
-| 109 | 可乐           |       49 |      14 |       NULL |      1 |   9.00 | https://example.com/mcd/coke1.jpg      |
-| 110 | 可乐           |       50 |      14 |       NULL |      1 |   9.00 | https://example.com/mcd/coke1.jpg      |
-| 111 | 薯条（中）     |       50 |      12 |       NULL |      1 |  10.00 | https://example.com/mcd/fries1.jpg     |
-| 112 | 可乐           |       51 |      14 |       NULL |      3 |   9.00 | https://example.com/mcd/coke1.jpg      |
-| 113 | 薯条（中）     |       51 |      12 |       NULL |      4 |  10.00 | https://example.com/mcd/fries1.jpg     |
-| 114 | 麦旋风         |       51 |      13 |       NULL |      3 |  15.00 | https://example.com/mcd/shake1.jpg     |
-| 115 | 麦乐鸡         |       51 |      11 |       NULL |      2 |  18.00 | https://example.com/mcd/nuggets1.jpg   |
-| 116 | 麦辣鸡腿堡     |       51 |      10 |       NULL |      1 |  19.00 | https://example.com/mcd/burger2.jpg    |
-| 117 | 巨无霸         |       51 |       9 |       NULL |     11 |  24.00 | https://example.com/mcd/burger1.jpg    |
-| 118 | 可颂           |       52 |      21 |       NULL |      1 |  18.00 | https://example.com/sb/croissant1.jpg  |
-| 119 | 芒果西番莲果茶 |       53 |      19 |       NULL |      1 |  30.00 | https://example.com/sb/fruittea1.jpg   |
-| 120 | 拿铁           |       53 |      15 |       NULL |      1 |  32.00 | https://example.com/sb/latte1.jpg      |
-| 121 | 蛋挞           |       54 |       6 |       NULL |      1 |   8.00 | https://example.com/kfc/tart1.jpg      |
-| 122 | 可乐           |       54 |       7 |       NULL |      1 |   9.00 | https://example.com/kfc/coke1.jpg      |
-| 123 | 雪碧           |       54 |       8 |       NULL |      1 |   9.00 | https://example.com/kfc/sprite1.jpg    |
-| 124 | 洋葱圈         |       54 |      58 |       NULL |      1 |  10.00 | https://example.com/ht/snack5.jpg      |
-| 125 | 原味鸡         |       54 |       3 |       NULL |      1 |  12.00 | https://example.com/kfc/chicken1.jpg   |
-| 126 | 洋葱圈         |       55 |      58 |       NULL |     11 |  10.00 | https://example.com/ht/snack5.jpg      |
-| 127 | 可颂           |       55 |      21 |       NULL |     13 |  18.00 | https://example.com/sb/croissant1.jpg  |
-| 128 | 美式咖啡       |       55 |      16 |       NULL |     12 |  25.00 | https://example.com/sb/americano1.jpg  |
-| 129 | 芝士蛋糕       |       55 |      20 |       NULL |      6 |  28.00 | https://example.com/sb/cake1.jpg       |
-| 130 | 芒果西番莲果茶 |       55 |      19 |       NULL |     16 |  30.00 | https://example.com/sb/fruittea1.jpg   |
-| 131 | 拿铁           |       55 |      15 |       NULL |      3 |  32.00 | https://example.com/sb/latte1.jpg      |
-| 132 | 卡布奇诺       |       55 |      17 |       NULL |      3 |  32.00 | https://example.com/sb/cappuccino1.jpg |
-| 133 | 抹茶星冰乐     |       55 |      18 |       NULL |      1 |  35.00 | https://example.com/sb/matcha1.jpg     |
-| 134 | 蛋挞           |       56 |       6 |       NULL |    104 |   8.00 | https://example.com/kfc/tart1.jpg      |
-| 135 | 可乐           |       56 |       7 |       NULL |     45 |   9.00 | https://example.com/kfc/coke1.jpg      |
-| 136 | 雪碧           |       56 |       8 |       NULL |     24 |   9.00 | https://example.com/kfc/sprite1.jpg    |
-| 137 | 洋葱圈         |       56 |      58 |       NULL |     32 |  10.00 | https://example.com/ht/snack5.jpg      |
-| 138 | 原味鸡         |       56 |       3 |       NULL |     36 |  12.00 | https://example.com/kfc/chicken1.jpg   |
-| 139 | 薯条（大）     |       56 |       5 |       NULL |     55 |  12.00 | https://example.com/kfc/fries1.jpg     |
-| 140 | 蛋挞           |       56 |      34 |       NULL |     33 |  12.00 | https://example.com/ht/tart1.jpg       |
-| 141 | 薯条           |       56 |      55 |       NULL |     23 |  12.00 | https://example.com/ht/snack2.jpg      |
-| 142 | 上校鸡块       |       56 |      59 |       NULL |     22 |  12.00 | https://example.com/ht/snack6.jpg      |
-| 143 | 香辣鸡翅       |       56 |       4 |       NULL |     14 |  13.00 | https://example.com/kfc/wing1.jpg      |
-| 144 | 鸡米花         |       56 |      54 |       NULL |     17 |  15.00 | https://example.com/ht/snack1.jpg      |
-| 145 | 鸡柳           |       56 |      57 |       NULL |      8 |  15.00 | https://example.com/ht/snack4.jpg      |
-| 146 | 蛋糕           |       56 |      35 |       NULL |      7 |  18.00 | https://example.com/ht/cake1.jpg       |
-| 147 | 鸡翅           |       56 |      56 |       NULL |      2 |  18.00 | https://example.com/ht/snack3.jpg      |
-| 148 | 香辣鸡腿堡     |       56 |       1 |       NULL |      1 |  19.00 | https://example.com/kfc/burger1.jpg    |
-| 149 | 奥尔良烤鸡腿堡 |       56 |       2 |       NULL |     13 |  20.00 | https://example.com/kfc/burger2.jpg    |
-| 150 | 蛋挞           |       57 |       6 |       NULL |      1 |   8.00 | https://example.com/kfc/tart1.jpg      |
-| 151 | 可乐           |       57 |       7 |       NULL |      1 |   9.00 | https://example.com/kfc/coke1.jpg      |
-| 152 | 奥尔良烤鸡腿堡 |       58 |       2 |       NULL |      1 |  20.00 | https://example.com/kfc/burger2.jpg    |
-| 153 | 香辣鸡腿堡     |       58 |       1 |       NULL |      1 |  19.00 | https://example.com/kfc/burger1.jpg    |
-+-----+----------------+----------+---------+------------+--------+--------+----------------------------------------+
-153 rows in set (0.00 sec)
++-----+--------------------------+----------+---------+------------+--------+--------+----------------------------------------+
+| id  | name                     | order_id | dish_id | setmeal_id | number | amount | image                                  |
++-----+--------------------------+----------+---------+------------+--------+--------+----------------------------------------+
+|   1 | 香辣鸡腿堡               |        1 |       1 |       NULL |      1 |  19.00 | NULL                                   |
+|   2 | 薯条（大）               |        1 |       5 |       NULL |      1 |  12.00 | NULL                                   |
+|   3 | 可乐                     |        1 |       7 |       NULL |      1 |   9.00 | NULL                                   |
+|   4 | 巨无霸                   |        2 |       9 |       NULL |      1 |  24.00 | NULL                                   |
+|   5 | 薯条（中）               |        2 |      11 |       NULL |      1 |  10.00 | NULL                                   |
+|   6 | 可乐                     |        2 |      14 |       NULL |      1 |   9.00 | NULL                                   |
+|   7 | 拿铁                     |        3 |      15 |       NULL |      1 |  32.00 | NULL                                   |
+|   8 | 超级至尊披萨             |        4 |      22 |       NULL |      1 |  89.00 | NULL                                   |
+|   9 | 芝芝莓莓                 |        5 |      29 |       NULL |      2 |  56.00 | NULL                                   |
+|  10 | 香辣鸡腿堡               |        6 |       1 |       NULL |      2 |  38.00 | NULL                                   |
+|  11 | 奥尔良烤鸡腿堡           |        6 |       2 |       NULL |      1 |  20.00 | NULL                                   |
+|  12 | 可乐                     |        6 |       7 |       NULL |      2 |  18.00 | NULL                                   |
+|  13 | 麦辣鸡腿堡               |        7 |      10 |       NULL |      2 |  38.00 | NULL                                   |
+|  14 | 薯条（中）               |        7 |      11 |       NULL |      1 |  10.00 | NULL                                   |
+|  15 | 可乐                     |        7 |      14 |       NULL |      1 |   9.00 | NULL                                   |
+|  16 | 拿铁                     |        8 |      15 |       NULL |      2 |  64.00 | NULL                                   |
+|  17 | 多肉葡萄                 |        9 |      30 |       NULL |      1 |  28.00 | NULL                                   |
+|  18 | 珍珠奶茶                 |        9 |      34 |       NULL |      1 |  22.00 | NULL                                   |
+|  19 | 夏威夷风情披萨           |       10 |      23 |       NULL |      1 |  79.00 | NULL                                   |
+|  20 | 香辣鸡腿堡               |       11 |       1 |       NULL |      1 |  19.00 | NULL                                   |
+|  21 | 原味鸡                   |       11 |       3 |       NULL |      1 |  12.00 | NULL                                   |
+|  22 | 可乐                     |       11 |       7 |       NULL |      1 |   9.00 | NULL                                   |
+|  23 | 拿铁                     |       12 |      15 |       NULL |      1 |  32.00 | NULL                                   |
+|  24 | 可颂                     |       12 |      20 |       NULL |      1 |  18.00 | NULL                                   |
+|  25 | 芝芝莓莓                 |       13 |      29 |       NULL |      2 |  56.00 | NULL                                   |
+|  26 | 超级至尊披萨             |       14 |      22 |       NULL |      1 |  89.00 | NULL                                   |
+|  27 | 意大利肉酱面             |       14 |      24 |       NULL |      1 |  45.00 | NULL                                   |
+|  28 | 巨无霸                   |       15 |       9 |       NULL |      2 |  48.00 | NULL                                   |
+|  29 | 可乐                     |       15 |      14 |       NULL |      1 |   9.00 | NULL                                   |
+|  30 | 奥尔良烤鸡腿堡           |       16 |       2 |       NULL |      1 |  20.00 | NULL                                   |
+|  31 | 香辣鸡翅                 |       16 |       4 |       NULL |      1 |  13.00 | NULL                                   |
+|  32 | 芝芝莓莓                 |       17 |      29 |       NULL |      1 |  28.00 | NULL                                   |
+|  33 | 拿铁                     |       18 |      15 |       NULL |      1 |  32.00 | NULL                                   |
+|  34 | 可颂                     |       18 |      20 |       NULL |      1 |  18.00 | NULL                                   |
+|  35 | 巨无霸                   |       19 |       9 |       NULL |      1 |  24.00 | NULL                                   |
+|  36 | 薯条（中）               |       19 |      11 |       NULL |      1 |  10.00 | NULL                                   |
+|  37 | 可乐                     |       19 |      14 |       NULL |      1 |   9.00 | NULL                                   |
+|  38 | 夏威夷风情披萨           |       20 |      23 |       NULL |      1 |  79.00 | NULL                                   |
+|  39 | 香辣鸡腿堡               |       21 |       1 |       NULL |      1 |  19.00 | NULL                                   |
+|  40 | 原味鸡                   |       21 |       3 |       NULL |      1 |  12.00 | NULL                                   |
+|  41 | 可乐                     |       21 |       7 |       NULL |      1 |   9.00 | NULL                                   |
+|  42 | 满杯水果茶               |       22 |      31 |       NULL |      1 |  32.00 | NULL                                   |
+|  43 | 珍珠奶茶                 |       22 |      34 |       NULL |      1 |  22.00 | NULL                                   |
+|  44 | 拿铁                     |       23 |      15 |       NULL |      1 |  32.00 | NULL                                   |
+|  45 | 巨无霸                   |       24 |       9 |       NULL |      2 |  48.00 | NULL                                   |
+|  46 | 可乐                     |       24 |      14 |       NULL |      1 |   9.00 | NULL                                   |
+|  47 | 夏威夷风情披萨           |       25 |      23 |       NULL |      1 |  79.00 | NULL                                   |
+|  48 | 香辣鸡腿堡               |       26 |       1 |       NULL |      1 |  19.00 | NULL                                   |
+|  49 | 薯条（大）               |       26 |       5 |       NULL |      1 |  12.00 | NULL                                   |
+|  50 | 可乐                     |       26 |       7 |       NULL |      1 |   9.00 | NULL                                   |
+|  51 | 拿铁                     |       27 |      15 |       NULL |      1 |  32.00 | NULL                                   |
+|  52 | 可颂                     |       27 |      20 |       NULL |      1 |  18.00 | NULL                                   |
+|  53 | 芝芝莓莓                 |       28 |      29 |       NULL |      2 |  56.00 | NULL                                   |
+|  54 | 巨无霸                   |       29 |       9 |       NULL |      1 |  24.00 | NULL                                   |
+|  55 | 薯条（中）               |       29 |      11 |       NULL |      1 |  10.00 | NULL                                   |
+|  56 | 可乐                     |       29 |      14 |       NULL |      1 |   9.00 | NULL                                   |
+|  57 | 超级至尊披萨             |       30 |      22 |       NULL |      1 |  89.00 | NULL                                   |
+|  58 | 意大利肉酱面             |       30 |      24 |       NULL |      1 |  45.00 | NULL                                   |
+|  59 | 香辣鸡腿堡               |       31 |       1 |       NULL |      1 |  19.00 | NULL                                   |
+|  60 | 原味鸡                   |       31 |       3 |       NULL |      1 |  12.00 | NULL                                   |
+|  61 | 可乐                     |       31 |       7 |       NULL |      1 |   9.00 | NULL                                   |
+|  62 | 多肉葡萄                 |       32 |      30 |       NULL |      1 |  28.00 | NULL                                   |
+|  63 | 珍珠奶茶                 |       32 |      34 |       NULL |      1 |  22.00 | NULL                                   |
+|  64 | 拿铁                     |       33 |      15 |       NULL |      1 |  32.00 | NULL                                   |
+|  65 | 巨无霸                   |       34 |       9 |       NULL |      2 |  48.00 | NULL                                   |
+|  66 | 可乐                     |       34 |      14 |       NULL |      1 |   9.00 | NULL                                   |
+|  67 | 夏威夷风情披萨           |       35 |      23 |       NULL |      1 |  79.00 | NULL                                   |
+|  68 | 茉莉花茶                 |       36 |    NULL |       NULL |      1 |   NULL | https://example.com/ht/greentea2.jpg   |
+|  69 | 巨无霸                   |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/burger1.jpg    |
+|  70 | 麦辣鸡腿堡               |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/burger2.jpg    |
+|  71 | 麦乐鸡                   |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/nuggets1.jpg   |
+|  72 | 薯条（中）               |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/fries1.jpg     |
+|  73 | 麦旋风                   |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/shake1.jpg     |
+|  74 | 可乐                     |       37 |    NULL |       NULL |      1 |   NULL | https://example.com/mcd/coke1.jpg      |
+|  75 | 超级至尊披萨             |       38 |      22 |       NULL |      1 |  89.00 | https://example.com/ph/pizza1.jpg      |
+|  76 | 可颂                     |       39 |      21 |       NULL |      1 |  18.00 | https://example.com/sb/croissant1.jpg  |
+|  77 | 美式咖啡                 |       39 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
+|  78 | 芝士蛋糕                 |       39 |      20 |       NULL |      1 |  28.00 | https://example.com/sb/cake1.jpg       |
+|  79 | 芒果西番莲果茶           |       39 |      19 |       NULL |      1 |  30.00 | https://example.com/sb/fruittea1.jpg   |
+|  80 | 拿铁                     |       39 |      15 |       NULL |      1 |  32.00 | https://example.com/sb/latte1.jpg      |
+|  81 | 卡布奇诺                 |       39 |      17 |       NULL |      1 |  32.00 | https://example.com/sb/cappuccino1.jpg |
+|  82 | 抹茶星冰乐               |       39 |      18 |       NULL |      1 |  35.00 | https://example.com/sb/matcha1.jpg     |
+|  83 | 芝士蛋糕                 |       40 |      20 |       NULL |      1 |  28.00 | https://example.com/sb/cake1.jpg       |
+|  84 | 可颂                     |       41 |      21 |       NULL |      2 |  18.00 | https://example.com/sb/croissant1.jpg  |
+|  85 | 美式咖啡                 |       41 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
+|  86 | 芝士蛋糕                 |       41 |      20 |       NULL |      1 |  28.00 | https://example.com/sb/cake1.jpg       |
+|  87 | 芒果西番莲果茶           |       41 |      19 |       NULL |      1 |  30.00 | https://example.com/sb/fruittea1.jpg   |
+|  88 | 拿铁                     |       41 |      15 |       NULL |      1 |  32.00 | https://example.com/sb/latte1.jpg      |
+|  89 | 卡布奇诺                 |       41 |      17 |       NULL |      1 |  32.00 | https://example.com/sb/cappuccino1.jpg |
+|  90 | 抹茶星冰乐               |       41 |      18 |       NULL |      1 |  35.00 | https://example.com/sb/matcha1.jpg     |
+|  91 | 拿铁                     |       42 |      15 |       NULL |      2 |  32.00 | https://example.com/sb/latte1.jpg      |
+|  92 | 芒果西番莲果茶           |       42 |      19 |       NULL |      5 |  30.00 | https://example.com/sb/fruittea1.jpg   |
+|  93 | 美式咖啡                 |       43 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
+|  94 | 可颂                     |       44 |      21 |       NULL |      1 |  18.00 | https://example.com/sb/croissant1.jpg  |
+|  95 | 美式咖啡                 |       44 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
+|  96 | 卡布奇诺                 |       44 |      17 |       NULL |      1 |  32.00 | https://example.com/sb/cappuccino1.jpg |
+|  97 | 抹茶星冰乐               |       44 |      18 |       NULL |      1 |  35.00 | https://example.com/sb/matcha1.jpg     |
+|  98 | 可颂                     |       45 |      21 |       NULL |      1 |  18.00 | https://example.com/sb/croissant1.jpg  |
+|  99 | 美式咖啡                 |       45 |      16 |       NULL |      1 |  25.00 | https://example.com/sb/americano1.jpg  |
+| 100 | 芝士蛋糕                 |       45 |      20 |       NULL |      1 |  28.00 | https://example.com/sb/cake1.jpg       |
+| 101 | 芒果西番莲果茶           |       45 |      19 |       NULL |      1 |  30.00 | https://example.com/sb/fruittea1.jpg   |
+| 102 | 卡布奇诺                 |       45 |      17 |       NULL |      1 |  32.00 | https://example.com/sb/cappuccino1.jpg |
+| 103 | 蛋挞                     |       46 |       6 |       NULL |      1 |   8.00 | https://example.com/kfc/tart1.jpg      |
+| 104 | 巨无霸                   |       47 |       9 |       NULL |      1 |  24.00 | https://example.com/mcd/burger1.jpg    |
+| 105 | 麦辣鸡腿堡               |       47 |      10 |       NULL |      1 |  19.00 | https://example.com/mcd/burger2.jpg    |
+| 106 | 麦乐鸡                   |       48 |      11 |       NULL |      1 |  18.00 | https://example.com/mcd/nuggets1.jpg   |
+| 107 | 巨无霸                   |       48 |       9 |       NULL |      1 |  24.00 | https://example.com/mcd/burger1.jpg    |
+| 108 | 麦旋风                   |       49 |      13 |       NULL |      1 |  15.00 | https://example.com/mcd/shake1.jpg     |
+| 109 | 可乐                     |       49 |      14 |       NULL |      1 |   9.00 | https://example.com/mcd/coke1.jpg      |
+| 110 | 可乐                     |       50 |      14 |       NULL |      1 |   9.00 | https://example.com/mcd/coke1.jpg      |
+| 111 | 薯条（中）               |       50 |      12 |       NULL |      1 |  10.00 | https://example.com/mcd/fries1.jpg     |
+| 112 | 可乐                     |       51 |      14 |       NULL |      3 |   9.00 | https://example.com/mcd/coke1.jpg      |
+| 113 | 薯条（中）               |       51 |      12 |       NULL |      4 |  10.00 | https://example.com/mcd/fries1.jpg     |
+| 114 | 麦旋风                   |       51 |      13 |       NULL |      3 |  15.00 | https://example.com/mcd/shake1.jpg     |
+| 115 | 麦乐鸡                   |       51 |      11 |       NULL |      2 |  18.00 | https://example.com/mcd/nuggets1.jpg   |
+| 116 | 麦辣鸡腿堡               |       51 |      10 |       NULL |      1 |  19.00 | https://example.com/mcd/burger2.jpg    |
+| 117 | 巨无霸                   |       51 |       9 |       NULL |     11 |  24.00 | https://example.com/mcd/burger1.jpg    |
+| 118 | 可颂                     |       52 |      21 |       NULL |      1 |  18.00 | https://example.com/sb/croissant1.jpg  |
+| 119 | 芒果西番莲果茶           |       53 |      19 |       NULL |      1 |  30.00 | https://example.com/sb/fruittea1.jpg   |
+| 120 | 拿铁                     |       53 |      15 |       NULL |      1 |  32.00 | https://example.com/sb/latte1.jpg      |
+| 121 | 蛋挞                     |       54 |       6 |       NULL |      1 |   8.00 | https://example.com/kfc/tart1.jpg      |
+| 122 | 可乐                     |       54 |       7 |       NULL |      1 |   9.00 | https://example.com/kfc/coke1.jpg      |
+| 123 | 雪碧                     |       54 |       8 |       NULL |      1 |   9.00 | https://example.com/kfc/sprite1.jpg    |
+| 124 | 洋葱圈                   |       54 |      58 |       NULL |      1 |  10.00 | https://example.com/ht/snack5.jpg      |
+| 125 | 原味鸡                   |       54 |       3 |       NULL |      1 |  12.00 | https://example.com/kfc/chicken1.jpg   |
+| 126 | 洋葱圈                   |       55 |      58 |       NULL |     11 |  10.00 | https://example.com/ht/snack5.jpg      |
+| 127 | 可颂                     |       55 |      21 |       NULL |     13 |  18.00 | https://example.com/sb/croissant1.jpg  |
+| 128 | 美式咖啡                 |       55 |      16 |       NULL |     12 |  25.00 | https://example.com/sb/americano1.jpg  |
+| 129 | 芝士蛋糕                 |       55 |      20 |       NULL |      6 |  28.00 | https://example.com/sb/cake1.jpg       |
+| 130 | 芒果西番莲果茶           |       55 |      19 |       NULL |     16 |  30.00 | https://example.com/sb/fruittea1.jpg   |
+| 131 | 拿铁                     |       55 |      15 |       NULL |      3 |  32.00 | https://example.com/sb/latte1.jpg      |
+| 132 | 卡布奇诺                 |       55 |      17 |       NULL |      3 |  32.00 | https://example.com/sb/cappuccino1.jpg |
+| 133 | 抹茶星冰乐               |       55 |      18 |       NULL |      1 |  35.00 | https://example.com/sb/matcha1.jpg     |
+| 134 | 蛋挞                     |       56 |       6 |       NULL |    104 |   8.00 | https://example.com/kfc/tart1.jpg      |
+| 135 | 可乐                     |       56 |       7 |       NULL |     45 |   9.00 | https://example.com/kfc/coke1.jpg      |
+| 136 | 雪碧                     |       56 |       8 |       NULL |     24 |   9.00 | https://example.com/kfc/sprite1.jpg    |
+| 137 | 洋葱圈                   |       56 |      58 |       NULL |     32 |  10.00 | https://example.com/ht/snack5.jpg      |
+| 138 | 原味鸡                   |       56 |       3 |       NULL |     36 |  12.00 | https://example.com/kfc/chicken1.jpg   |
+| 139 | 薯条（大）               |       56 |       5 |       NULL |     55 |  12.00 | https://example.com/kfc/fries1.jpg     |
+| 140 | 蛋挞                     |       56 |      34 |       NULL |     33 |  12.00 | https://example.com/ht/tart1.jpg       |
+| 141 | 薯条                     |       56 |      55 |       NULL |     23 |  12.00 | https://example.com/ht/snack2.jpg      |
+| 142 | 上校鸡块                 |       56 |      59 |       NULL |     22 |  12.00 | https://example.com/ht/snack6.jpg      |
+| 143 | 香辣鸡翅                 |       56 |       4 |       NULL |     14 |  13.00 | https://example.com/kfc/wing1.jpg      |
+| 144 | 鸡米花                   |       56 |      54 |       NULL |     17 |  15.00 | https://example.com/ht/snack1.jpg      |
+| 145 | 鸡柳                     |       56 |      57 |       NULL |      8 |  15.00 | https://example.com/ht/snack4.jpg      |
+| 146 | 蛋糕                     |       56 |      35 |       NULL |      7 |  18.00 | https://example.com/ht/cake1.jpg       |
+| 147 | 鸡翅                     |       56 |      56 |       NULL |      2 |  18.00 | https://example.com/ht/snack3.jpg      |
+| 148 | 香辣鸡腿堡               |       56 |       1 |       NULL |      1 |  19.00 | https://example.com/kfc/burger1.jpg    |
+| 149 | 奥尔良烤鸡腿堡           |       56 |       2 |       NULL |     13 |  20.00 | https://example.com/kfc/burger2.jpg    |
+| 150 | 蛋挞                     |       57 |       6 |       NULL |      1 |   8.00 | https://example.com/kfc/tart1.jpg      |
+| 151 | 可乐                     |       57 |       7 |       NULL |      1 |   9.00 | https://example.com/kfc/coke1.jpg      |
+| 152 | 奥尔良烤鸡腿堡           |       58 |       2 |       NULL |      1 |  20.00 | https://example.com/kfc/burger2.jpg    |
+| 153 | 香辣鸡腿堡               |       58 |       1 |       NULL |      1 |  19.00 | https://example.com/kfc/burger1.jpg    |
+| 154 | 无上至尊豪华皇帝披萨套餐 |       59 |    NULL |        169 |      1 | 888.00 | https://example.com/ht/greentea3.jpg   |
++-----+--------------------------+----------+---------+------------+--------+--------+----------------------------------------+
+154 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `orders`;
 +----+---------------+--------+---------+-----------+----------+-----------------+---------------------+---------------------+---------------------+------------+---------+------------+------------+-----------+-----------------------------------------+-------------+----------+---------------------+---------------------+
@@ -679,68 +705,55 @@ mysql> SELECT * FROM `orders`;
 | 56 | 1772027031129 |      5 |       3 | NULL      |        1 |            NULL | NULL                | NULL                | NULL                | 肯德基     | 4799.00 |          2 |          1 | 王五      | test3大道test3街test3号test3户          | 13900139003 | NULL     | 2026-02-25 21:43:51 | 2026-02-25 21:44:12 |
 | 57 | 1772088712046 |      5 |       1 | NULL      |        1 |            NULL | NULL                | NULL                | NULL                | 肯德基     |   17.00 |          2 |          1 | 张test1   | 建国路88号1号楼test1室                  | 13900139001 | NULL     | 2026-02-26 14:51:52 | 2026-02-26 14:52:19 |
 | 58 | 1772532638334 |      5 |       2 | NULL      |        1 |            NULL | NULL                | NULL                | NULL                | 肯德基     |   39.00 |          2 |          1 | 李四      | test2路                                 | 13900139002 | NULL     | 2026-03-03 18:10:38 | 2026-03-03 18:10:49 |
+| 59 | 1772544349530 |      5 |       2 | NULL      |        4 |            NULL | NULL                | NULL                | NULL                | 必胜客     |  888.00 |          2 |          1 | 李四      | test2路                                 | 13900139002 | NULL     | 2026-03-03 21:25:50 | 2026-03-03 21:26:22 |
 +----+---------------+--------+---------+-----------+----------+-----------------+---------------------+---------------------+---------------------+------------+---------+------------+------------+-----------+-----------------------------------------+-------------+----------+---------------------+---------------------+
-58 rows in set (0.01 sec)
+59 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `setmeal_dish`;
-+----+------------+---------+----------------+--------+--------+------+
-| id | setmeal_id | dish_id | name           | price  | copies | sort |
-+----+------------+---------+----------------+--------+--------+------+
-|  1 |        162 |     661 | kfc2           |   2.00 |      1 |    0 |
-|  2 |        162 |       6 | 蛋挞           |   8.00 |      1 |    0 |
-|  3 |        162 |       7 | 可乐           |   9.00 |      1 |    0 |
-|  4 |        162 |       8 | 雪碧           |   9.00 |      1 |    0 |
-|  5 |        162 |       3 | 原味鸡         |  12.00 |      1 |    0 |
-|  6 |        162 |       5 | 薯条（大）     |  12.00 |      1 |    0 |
-|  7 |        162 |       4 | 香辣鸡翅       |  13.00 |      1 |    0 |
-|  8 |        162 |       1 | 香辣鸡腿堡     |  19.00 |      1 |    0 |
-|  9 |        162 |       2 | 奥尔良烤鸡腿堡 |  20.00 |      1 |    0 |
-| 10 |        162 |     662 | kfctaocan2     | 177.00 |      1 |    0 |
-| 11 |        163 |       3 | 原味鸡         |  12.00 |      2 |    0 |
-+----+------------+---------+----------------+--------+--------+------+
-11 rows in set (0.00 sec)
++----+------------+---------+----------------+-------+--------+------+
+| id | setmeal_id | dish_id | name           | price | copies | sort |
++----+------------+---------+----------------+-------+--------+------+
+| 57 |        164 |       3 | 原味鸡         | 12.00 |      2 |    0 |
+| 58 |        165 |      14 | 可乐           |  9.00 |      1 |    0 |
+| 59 |        165 |     663 | 双层吉士堡     | 12.00 |      1 |    0 |
+| 60 |        166 |      16 | 美式咖啡       | 25.00 |      1 |    0 |
+| 61 |        166 |      15 | 拿铁           | 32.00 |      1 |    0 |
+| 74 |        168 |      50 | 茉莉花茶       | 16.00 |      1 |    0 |
+| 81 |        169 |      25 | 奶油蘑菇汤     | 18.00 |     10 |    0 |
+| 82 |        169 |      26 | 炸鸡翅         | 28.00 |     10 |    0 |
+| 83 |        169 |      27 | 提拉米苏       | 32.00 |     10 |    0 |
+| 84 |        169 |      24 | 意大利肉酱面   | 45.00 |     10 |    0 |
+| 85 |        169 |      23 | 夏威夷风情披萨 | 79.00 |     10 |    0 |
+| 86 |        169 |      22 | 超级至尊披萨   | 89.00 |     10 |    0 |
++----+------------+---------+----------------+-------+--------+------+
+12 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `setmeal`;
-+-----+-------------+----------------+--------+--------+------------------------------------------------+--------------------------------------+---------------------+---------------------+-------------+-------------+----------+------------+
-| id  | category_id | name           | price  | status | description                                    | image                                | create_time         | update_time         | create_user | update_user | store_id | store_name |
-+-----+-------------+----------------+--------+--------+------------------------------------------------+--------------------------------------+---------------------+---------------------+-------------+-------------+----------+------------+
-|   1 | 5           | 单人套餐A      |  35.00 |      1 | 香辣鸡腿堡+薯条（中）+可乐                     | https://example.com/kfc/setmeal1.jpg | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        1 | 肯德基     |
-|   2 | 5           | 双人套餐A      |  68.00 |      1 | 2个香辣鸡腿堡+2份薯条（中）+2杯可乐            | https://example.com/kfc/setmeal2.jpg | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        1 | 肯德基     |
-|   3 | 5           | 全家桶         | 128.00 |      1 | 多种炸鸡组合，适合全家分享                     | https://example.com/kfc/setmeal3.jpg | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        1 | 肯德基     |
-|   4 | 10          | 1+1随心配      |  13.90 |      1 | 任选2款小食或饮料                              | https://example.com/mcd/setmeal1.jpg | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        2 | 肯德基     |
-|   5 | 10          | 超值套餐       |  39.00 |      1 | 巨无霸+薯条（中）+可乐                         | https://example.com/mcd/setmeal2.jpg | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        2 | 肯德基     |
-|   6 | NULL        | 下午茶套餐     |  50.00 |      1 | 拿铁+可颂                                      | https://example.com/sb/setmeal1.jpg  | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        3 | 肯德基     |
-|   7 | NULL        | 咖啡套餐       |  60.00 |      1 | 2杯拿铁+芝士蛋糕                               | https://example.com/sb/setmeal2.jpg  | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        3 | 肯德基     |
-|   8 | 20          | 超级至尊套餐   | 128.00 |      1 | 超级至尊披萨+意大利肉酱面+炸鸡翅               | https://example.com/ph/setmeal1.jpg  | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        4 | 肯德基     |
-|   9 | 20          | 情侣套餐       | 158.00 |      1 | 2个披萨+2份意面+2份甜点                        | https://example.com/ph/setmeal2.jpg  | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        4 | 肯德基     |
-|  10 | NULL        | 闺蜜套餐       |  50.00 |      1 | 2杯芝芝莓莓+蛋挞                               | https://example.com/ht/setmeal1.jpg  | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        5 | 肯德基     |
-|  11 | NULL        | 下午茶套餐     |  45.00 |      1 | 满杯水果茶+蛋糕                                | https://example.com/ht/setmeal2.jpg  | 2026-02-13 00:55:47 | 2026-02-23 15:47:23 |        NULL |        NULL |        5 | 肯德基     |
-|  12 | NULL        | 青春活力套餐   |  48.00 |      1 | 芝芝莓莓+满杯水果茶+鸡米花                     | https://example.com/ht/setmeal3.jpg  | 2026-02-20 16:59:38 | 2026-02-23 15:47:23 |        NULL |        NULL |        5 | 肯德基     |
-|  13 | NULL        | 闺蜜聚会套餐   |  88.00 |      1 | 2杯芝芝芒芒+2杯多肉葡萄+2份鸡翅                | https://example.com/ht/setmeal4.jpg  | 2026-02-20 16:59:38 | 2026-02-23 15:47:23 |        NULL |        NULL |        5 | 肯德基     |
-|  14 | NULL        | 家庭分享套餐   | 128.00 |      1 | 2杯芝芝桃桃+2杯满杯橙子茶+鸡米花+薯条+上校鸡块 | https://example.com/ht/setmeal5.jpg  | 2026-02-20 16:59:38 | 2026-02-23 15:47:23 |        NULL |        NULL |        5 | 肯德基     |
-|  15 | NULL        | 单人下午茶套餐 |  38.00 |      1 | 珍珠奶茶+蛋挞+洋葱圈                           | https://example.com/ht/setmeal6.jpg  | 2026-02-20 16:59:38 | 2026-02-23 15:47:23 |        NULL |        NULL |        5 | 肯德基     |
-|  16 | NULL        | 双人下午茶套餐 |  68.00 |      1 | 2杯抹茶奶茶+2份蛋糕+鸡柳                       | https://example.com/ht/setmeal7.jpg  | 2026-02-20 16:59:38 | 2026-02-23 15:47:23 |        NULL |        NULL |        5 | 肯德基     |
-|  17 | NULL        | 夏日清爽套餐   |  58.00 |      1 | 满杯西瓜茶+满杯菠萝茶+薯条+洋葱圈              | https://example.com/ht/setmeal8.jpg  | 2026-02-20 16:59:38 | 2026-02-23 15:47:23 |        NULL |        NULL |        5 | 肯德基     |
-| 162 | 1           | kfc套餐3       | 888.00 |      1 |                                                | https://example.com/ht/greentea3.jpg | NULL                | NULL                |        NULL |        NULL |        1 | NULL       |
-| 163 | 1           | 两个原味鸡     |   9.90 |      1 |                                                | https://example.com/ht/greentea3.jpg | NULL                | NULL                |        NULL |        NULL |        1 | NULL       |
-+-----+-------------+----------------+--------+--------+------------------------------------------------+--------------------------------------+---------------------+---------------------+-------------+-------------+----------+------------+
-19 rows in set (0.00 sec)
++-----+-------------+--------------------------+--------+--------+-------------+--------------------------------------+-------------+-------------+-------------+-------------+----------+------------+
+| id  | category_id | name                     | price  | status | description | image                                | create_time | update_time | create_user | update_user | store_id | store_name |
++-----+-------------+--------------------------+--------+--------+-------------+--------------------------------------+-------------+-------------+-------------+-------------+----------+------------+
+| 164 | 1           | 两个原味鸡               |   9.90 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        1 | NULL       |
+| 165 | 10          | 1+1随心选                |  13.90 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        2 | NULL       |
+| 166 | 11          | 套餐                     |  20.00 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        3 | NULL       |
+| 168 | 20          | 联动                     |   9.90 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        5 | NULL       |
+| 169 | 15          | 无上至尊豪华皇帝披萨套餐 | 888.00 |      1 |             | https://example.com/ht/greentea3.jpg | NULL        | NULL        |        NULL |        NULL |        4 | NULL       |
++-----+-------------+--------------------------+--------+--------+-------------+--------------------------------------+-------------+-------------+-------------+-------------+----------+------------+
+5 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `shopping_cart`;
-+-----+------------+-------------------------------------+---------+----------+------------+---------+------------+-------------+--------+--------+-------------+
-| id  | name       | image                               | user_id | store_id | store_name | dish_id | setmeal_id | dish_flavor | number | amount | create_time |
-+-----+------------+-------------------------------------+---------+----------+------------+---------+------------+-------------+--------+--------+-------------+
-| 393 | 洋葱圈     | https://example.com/ht/snack5.jpg   |       3 |        5 | NULL       |      58 |       NULL | NULL        |    530 |  10.00 | NULL        |
-| 396 | 蛋挞       | https://example.com/ht/tart1.jpg    |       3 |        5 | NULL       |      34 |       NULL | NULL        |    576 |  12.00 | NULL        |
-| 397 | 薯条       | https://example.com/ht/snack2.jpg   |       3 |        5 | NULL       |      55 |       NULL | NULL        |    301 |  12.00 | NULL        |
-| 398 | 上校鸡块   | https://example.com/ht/snack6.jpg   |       3 |        5 | NULL       |      59 |       NULL | NULL        |    255 |  12.00 | NULL        |
-| 400 | 鸡米花     | https://example.com/ht/snack1.jpg   |       3 |        5 | NULL       |      54 |       NULL | NULL        |    155 |  15.00 | NULL        |
-| 401 | 鸡柳       | https://example.com/ht/snack4.jpg   |       3 |        5 | NULL       |      57 |       NULL | NULL        |     38 |  15.00 | NULL        |
-| 402 | 蛋糕       | https://example.com/ht/cake1.jpg    |       3 |        5 | NULL       |      35 |       NULL | NULL        |     30 |  18.00 | NULL        |
-| 403 | 鸡翅       | https://example.com/ht/snack3.jpg   |       3 |        5 | NULL       |      56 |       NULL | NULL        |      5 |  18.00 | NULL        |
-| 410 | 香辣鸡腿堡 | https://example.com/kfc/burger1.jpg |       2 |        1 | NULL       |       1 |       NULL | NULL        |      1 |  19.00 | NULL        |
-+-----+------------+-------------------------------------+---------+----------+------------+---------+------------+-------------+--------+--------+-------------+
-9 rows in set (0.00 sec)
++-----+----------+-----------------------------------+---------+----------+------------+---------+------------+-------------+--------+--------+-------------+
+| id  | name     | image                             | user_id | store_id | store_name | dish_id | setmeal_id | dish_flavor | number | amount | create_time |
++-----+----------+-----------------------------------+---------+----------+------------+---------+------------+-------------+--------+--------+-------------+
+| 393 | 洋葱圈   | https://example.com/ht/snack5.jpg |       3 |        5 | NULL       |      58 |       NULL | NULL        |    530 |  10.00 | NULL        |
+| 396 | 蛋挞     | https://example.com/ht/tart1.jpg  |       3 |        5 | NULL       |      34 |       NULL | NULL        |    576 |  12.00 | NULL        |
+| 397 | 薯条     | https://example.com/ht/snack2.jpg |       3 |        5 | NULL       |      55 |       NULL | NULL        |    301 |  12.00 | NULL        |
+| 398 | 上校鸡块 | https://example.com/ht/snack6.jpg |       3 |        5 | NULL       |      59 |       NULL | NULL        |    255 |  12.00 | NULL        |
+| 400 | 鸡米花   | https://example.com/ht/snack1.jpg |       3 |        5 | NULL       |      54 |       NULL | NULL        |    155 |  15.00 | NULL        |
+| 401 | 鸡柳     | https://example.com/ht/snack4.jpg |       3 |        5 | NULL       |      57 |       NULL | NULL        |     38 |  15.00 | NULL        |
+| 402 | 蛋糕     | https://example.com/ht/cake1.jpg  |       3 |        5 | NULL       |      35 |       NULL | NULL        |     30 |  18.00 | NULL        |
+| 403 | 鸡翅     | https://example.com/ht/snack3.jpg |       3 |        5 | NULL       |      56 |       NULL | NULL        |      5 |  18.00 | NULL        |
++-----+----------+-----------------------------------+---------+----------+------------+---------+------------+-------------+--------+--------+-------------+
+8 rows in set (0.00 sec)
 
 mysql> SELECT * FROM `store_balance`;
 +----+----------+---------+---------------+------------------+---------------------+---------------------+
@@ -749,7 +762,7 @@ mysql> SELECT * FROM `store_balance`;
 |  1 |        1 |   39.00 |       4855.00 |          5816.00 | 2026-02-25 17:09:39 | 2026-02-25 16:27:58 |
 |  2 |        2 | 2000.00 |          0.00 |             0.00 | 2026-02-25 17:09:39 | 2026-02-25 16:27:58 |
 |  3 |        3 | 4519.00 |       1519.00 |             0.00 | 2026-02-25 17:11:18 | 2026-02-25 16:27:58 |
-|  4 |        4 | 4000.00 |          0.00 |             0.00 | 2026-02-25 17:09:39 | 2026-02-25 16:27:58 |
+|  4 |        4 | 4888.00 |        888.00 |             0.00 | 2026-02-25 17:09:39 | 2026-02-25 16:27:58 |
 |  5 |        5 | 5000.00 |          0.00 |             0.00 | 2026-02-25 17:09:39 | 2026-02-25 16:27:58 |
 +----+----------+---------+---------------+------------------+---------------------+---------------------+
 5 rows in set (0.00 sec)
