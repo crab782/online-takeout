@@ -11,10 +11,16 @@ import com.test.takeout.entity.OrderDetail;
 import com.test.takeout.entity.Orders;
 import com.test.takeout.entity.ShoppingCart;
 import com.test.takeout.service.AddressBookService;
+import com.test.takeout.service.DishService;
 import com.test.takeout.service.OrderDetailService;
 import com.test.takeout.service.OrdersService;
+import com.test.takeout.service.SetmealDishService;
+import com.test.takeout.service.SetmealService;
 import com.test.takeout.service.ShoppingCartService;
 import com.test.takeout.service.StoreBalanceService;
+import com.test.takeout.entity.Dish;
+import com.test.takeout.entity.Setmeal;
+import com.test.takeout.entity.SetmealDish;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,18 +50,27 @@ public class OrderController {
 
     private final HttpServletRequest request;
     private final StoreBalanceService storeBalanceService;
+    private final DishService dishService;
+    private final SetmealService setmealService;
+    private final SetmealDishService setmealDishService;
 
     public OrderController(OrdersService ordersService,
                        AddressBookService addressBookService,
                        OrderDetailService orderDetailService,
                        ShoppingCartService shoppingCartService,
                        StoreBalanceService storeBalanceService,
+                       DishService dishService,
+                       SetmealService setmealService,
+                       SetmealDishService setmealDishService,
                        HttpServletRequest request) {
         this.ordersService = ordersService;
         this.addressBookService = addressBookService;
         this.orderDetailService = orderDetailService;
         this.shoppingCartService = shoppingCartService;
         this.storeBalanceService = storeBalanceService;
+        this.dishService = dishService;
+        this.setmealService = setmealService;
+        this.setmealDishService = setmealDishService;
         this.request = request;
     }
 
@@ -615,6 +630,49 @@ public class OrderController {
                 return R.error("请先设置默认收货地址");
             }
 
+            // 检查库存
+            List<OrdersSubmitDTO.OrderDetailDTO> orderDetails = ordersSubmitDTO.getOrderDetails();
+            if (orderDetails != null && !orderDetails.isEmpty()) {
+                for (OrdersSubmitDTO.OrderDetailDTO detailDTO : orderDetails) {
+                    // 检查菜品库存
+                    if (detailDTO.getDishId() != null) {
+                        Dish dish = dishService.getById(detailDTO.getDishId());
+                        if (dish == null) {
+                            return R.error("商品【" + detailDTO.getName() + "】不存在");
+                        }
+                        if (dish.getStock() == null || dish.getStock() < detailDTO.getNumber()) {
+                            return R.error("商品【" + dish.getName() + "】库存不足，当前库存：" + 
+                                    (dish.getStock() != null ? dish.getStock() : 0) + "，需要：" + detailDTO.getNumber());
+                        }
+                    }
+                    // 检查套餐库存（套餐库存取包含菜品的最小库存）
+                    if (detailDTO.getSetmealId() != null) {
+                        Setmeal setmeal = setmealService.getById(detailDTO.getSetmealId());
+                        if (setmeal == null) {
+                            return R.error("套餐【" + detailDTO.getName() + "】不存在");
+                        }
+                        // 获取套餐包含的菜品
+                        LambdaQueryWrapper<SetmealDish> setmealDishQuery = new LambdaQueryWrapper<>();
+                        setmealDishQuery.eq(SetmealDish::getSetmealId, detailDTO.getSetmealId());
+                        List<SetmealDish> setmealDishes = setmealDishService.list(setmealDishQuery);
+                        
+                        for (SetmealDish setmealDish : setmealDishes) {
+                            Dish dish = dishService.getById(setmealDish.getDishId());
+                            if (dish == null) {
+                                return R.error("套餐【" + setmeal.getName() + "】中的商品不存在");
+                            }
+                            // 计算套餐所需菜品数量 = 套餐份数 * 每份套餐中该菜品的数量
+                            int requiredDishCount = detailDTO.getNumber() * setmealDish.getCopies();
+                            if (dish.getStock() == null || dish.getStock() < requiredDishCount) {
+                                return R.error("套餐【" + setmeal.getName() + "】库存不足，商品【" + 
+                                        dish.getName() + "】当前库存：" + (dish.getStock() != null ? dish.getStock() : 0) + 
+                                        "，需要：" + requiredDishCount);
+                            }
+                        }
+                    }
+                }
+            }
+
             Orders orders = new Orders();
             orders.setUserId(userId);
             orders.setStoreId(ordersSubmitDTO.getStoreId());
@@ -637,7 +695,6 @@ public class OrderController {
             log.info("订单创建成功，订单ID：{}，订单号：{}，店铺ID：{}，店铺名称：{}，状态：0（待付款）", 
                     orders.getId(), orders.getNumber(), ordersSubmitDTO.getStoreId(), ordersSubmitDTO.getStoreName());
 
-            List<OrdersSubmitDTO.OrderDetailDTO> orderDetails = ordersSubmitDTO.getOrderDetails();
             if (orderDetails != null && !orderDetails.isEmpty()) {
                 for (OrdersSubmitDTO.OrderDetailDTO detailDTO : orderDetails) {
                     OrderDetail orderDetail = new OrderDetail();
