@@ -189,6 +189,16 @@ public class SetmealController {
         // 构建查询条件
         LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
         
+        // 处理店铺ID参数
+        if (params.containsKey("storeId")) {
+            try {
+                Long storeId = Long.parseLong(params.get("storeId").toString());
+                queryWrapper.eq(Setmeal::getStoreId, storeId);
+            } catch (NumberFormatException e) {
+                log.error("店铺ID参数格式错误：{}", params.get("storeId"));
+            }
+        }
+        
         // 处理分类ID参数
         if (params.containsKey("categoryId")) {
             try {

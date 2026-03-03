@@ -187,21 +187,8 @@ public class DishController {
         if (params.containsKey("storeId")) {
             try {
                 Long storeId = Long.parseLong(params.get("storeId").toString());
-                // 先查询该店铺下的所有分类ID
-                LambdaQueryWrapper<Category> categoryQueryWrapper = new LambdaQueryWrapper<>();
-                categoryQueryWrapper.eq(Category::getStoreId, storeId);
-                categoryQueryWrapper.eq(Category::getStatus, 1); // 只查询启用状态的分类
-                List<Category> categories = categoryService.list(categoryQueryWrapper);
-                
-                if (categories != null && !categories.isEmpty()) {
-                    // 提取分类ID列表
-                    List<Long> categoryIds = categories.stream().map(Category::getId).collect(java.util.stream.Collectors.toList());
-                    // 根据分类ID列表查询菜品
-                    queryWrapper.in(Dish::getCategoryId, categoryIds);
-                } else {
-                    // 如果店铺下没有分类，返回空列表
-                    return R.success(new java.util.ArrayList<>());
-                }
+                // 直接查询该店铺下的所有菜品，包括未分类的菜品
+                queryWrapper.eq(Dish::getStoreId, storeId);
             } catch (NumberFormatException e) {
                 log.error("店铺ID参数格式错误：{}", params.get("storeId"));
             }

@@ -213,10 +213,23 @@ public class CategoryController {
     public R<List<Category>> list(@RequestParam Map<String, Object> params) {
         log.info("获取菜品分类列表：params={}", params);
 
-        // 获取当前登录用户的店铺ID
-        Long storeId = (Long) request.getAttribute("storeId");
+        // 获取店铺ID，优先从请求参数中获取
+        Long storeId = null;
+        if (params.containsKey("storeId")) {
+            try {
+                storeId = Long.parseLong(params.get("storeId").toString());
+            } catch (NumberFormatException e) {
+                log.warn("店铺ID格式错误：{}", params.get("storeId"));
+            }
+        }
+
+        // 如果请求参数中没有，尝试从请求属性中获取（登录用户）
         if (storeId == null) {
-            return R.error("请先登录");
+            storeId = (Long) request.getAttribute("storeId");
+        }
+
+        if (storeId == null) {
+            return R.error("请先登录或提供店铺ID");
         }
 
         // 构造条件构造器
