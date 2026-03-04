@@ -56,7 +56,10 @@ public class FrontUserController {
 
         User user = new User();
         user.setPhone(phone);
-        user.setPassword(password);
+        // 使用BCryptPasswordEncoder对密码进行加密
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        String encodedPassword = passwordEncoder.encode(password);
+        user.setPassword(encodedPassword);
         user.setStatus(1);
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
@@ -117,15 +120,30 @@ public class FrontUserController {
         // 验证密码
         org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
         
-        // 测试：生成新的加密密码并验证
-        String testEncodedPassword = passwordEncoder.encode(password);
-        log.info("新生成的加密密码：{}", testEncodedPassword);
-        boolean testMatch = passwordEncoder.matches(password, testEncodedPassword);
-        log.info("新密码匹配结果：{}", testMatch);
+        boolean passwordMatch = false;
         
-        // 验证原始密码
-        boolean passwordMatch = passwordEncoder.matches(password, user.getPassword());
-        log.info("原始密码匹配结果：{}", passwordMatch);
+        try {
+            // 尝试使用BCrypt验证（适用于新注册的用户）
+            passwordMatch = passwordEncoder.matches(password, user.getPassword());
+            log.info("BCrypt密码匹配结果：{}", passwordMatch);
+        } catch (Exception e) {
+            log.warn("BCrypt验证失败，尝试明文验证：{}", e.getMessage());
+        }
+        
+        // 如果BCrypt验证失败，尝试明文验证（适用于旧用户）
+        if (!passwordMatch) {
+            passwordMatch = password.equals(user.getPassword());
+            log.info("明文密码匹配结果：{}", passwordMatch);
+            
+            // 如果明文验证成功，自动更新为BCrypt加密密码
+            if (passwordMatch) {
+                String encodedPassword = passwordEncoder.encode(password);
+                user.setPassword(encodedPassword);
+                user.setUpdateTime(LocalDateTime.now());
+                userService.updateById(user);
+                log.info("密码已自动更新为BCrypt加密格式");
+            }
+        }
 
         if (!passwordMatch) {
             log.info("密码不匹配");
