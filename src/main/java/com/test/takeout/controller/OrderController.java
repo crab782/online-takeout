@@ -22,6 +22,7 @@ import com.test.takeout.entity.Dish;
 import com.test.takeout.entity.Setmeal;
 import com.test.takeout.entity.SetmealDish;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -637,6 +638,7 @@ public class OrderController {
      * @return 订单提交结果
      */
     @PostMapping("/submit")
+    @Transactional
     public R<Orders> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO) {
         log.info("提交订单：ordersSubmitDTO={}", ordersSubmitDTO);
 
@@ -729,6 +731,50 @@ public class OrderController {
                     orderDetail.setAmount(detailDTO.getAmount());
                     orderDetail.setImage(detailDTO.getImage());
                     orderDetailService.save(orderDetail);
+
+                    // 更新库存
+                    if (detailDTO.getDishId() != null) {
+                        // 更新菜品库存
+                        Dish dish = dishService.getById(detailDTO.getDishId());
+                        if (dish != null) {
+                            dish.setStock(dish.getStock() - detailDTO.getNumber());
+                            // 更新库存状态
+                            if (dish.getStock() <= 0) {
+                                dish.setStockStatus(0); // 售罄
+                            } else if (dish.getStock() < 10) {
+                                dish.setStockStatus(2); // 紧张
+                            } else {
+                                dish.setStockStatus(1); // 充足
+                            }
+                            dishService.updateById(dish);
+                            log.info("更新菜品库存：菜品ID={}，名称={}，原库存={}，减少数量={}，新库存={}",
+                                    dish.getId(), dish.getName(), dish.getStock() + detailDTO.getNumber(), detailDTO.getNumber(), dish.getStock());
+                        }
+                    } else if (detailDTO.getSetmealId() != null) {
+                        // 更新套餐包含的菜品库存
+                        LambdaQueryWrapper<SetmealDish> setmealDishQuery = new LambdaQueryWrapper<>();
+                        setmealDishQuery.eq(SetmealDish::getSetmealId, detailDTO.getSetmealId());
+                        List<SetmealDish> setmealDishes = setmealDishService.list(setmealDishQuery);
+                        
+                        for (SetmealDish setmealDish : setmealDishes) {
+                            Dish dish = dishService.getById(setmealDish.getDishId());
+                            if (dish != null) {
+                                int requiredDishCount = detailDTO.getNumber() * setmealDish.getCopies();
+                                dish.setStock(dish.getStock() - requiredDishCount);
+                                // 更新库存状态
+                                if (dish.getStock() <= 0) {
+                                    dish.setStockStatus(0); // 售罄
+                                } else if (dish.getStock() < 10) {
+                                    dish.setStockStatus(2); // 紧张
+                                } else {
+                                    dish.setStockStatus(1); // 充足
+                                }
+                                dishService.updateById(dish);
+                                log.info("更新套餐菜品库存：菜品ID={}，名称={}，原库存={}，减少数量={}，新库存={}",
+                                        dish.getId(), dish.getName(), dish.getStock() + requiredDishCount, requiredDishCount, dish.getStock());
+                            }
+                        }
+                    }
                 }
             }
 
