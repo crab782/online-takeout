@@ -1200,50 +1200,180 @@ public class PlatformController {
 
         Map<String, Object> result = new HashMap<>();
         
+        // 设置默认月份为当前月份
+        if (month == null || month.isEmpty()) {
+            month = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        }
+        
+        // 解析月份，获取该月的开始和结束时间
+        String[] monthParts = month.split("-");
+        int year = Integer.parseInt(monthParts[0]);
+        int monthValue = Integer.parseInt(monthParts[1]);
+        LocalDateTime startOfMonth = LocalDateTime.of(year, monthValue, 1, 0, 0, 0);
+        LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusSeconds(1);
+        
+        // 1. 获取所有店铺
+        List<Store> allStores = storeService.list();
+        long totalShops = allStores.size();
+        
+        // 2. 获取活跃店铺数（status=1）
+        LambdaQueryWrapper<Store> activeStoreWrapper = new LambdaQueryWrapper<>();
+        activeStoreWrapper.eq(Store::getStatus, 1);
+        long activeShops = storeService.count(activeStoreWrapper);
+        
+        // 3. 获取指定月份的所有订单
+        LambdaQueryWrapper<Orders> monthOrderWrapper = new LambdaQueryWrapper<>();
+        monthOrderWrapper.ge(Orders::getCreateTime, startOfMonth);
+        monthOrderWrapper.le(Orders::getCreateTime, endOfMonth);
+        List<Orders> monthOrders = ordersService.list(monthOrderWrapper);
+        
+        // 4. 计算总营收和总订单数
+        BigDecimal totalRevenue = monthOrders.stream()
+                .map(Orders::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long totalOrders = monthOrders.size();
+        
+        // 5. 计算平均订单金额
+        BigDecimal averageOrderAmount = totalOrders > 0 
+                ? totalRevenue.divide(BigDecimal.valueOf(totalOrders), 2, BigDecimal.ROUND_HALF_UP)
+                : BigDecimal.ZERO;
+        
+        // 6. 计算平台佣金（假设5%）
+        BigDecimal commissionRate = new BigDecimal("0.05");
+        BigDecimal totalCommission = totalRevenue.multiply(commissionRate).setScale(2, BigDecimal.ROUND_HALF_UP);
+        
+        // 7. 获取指定月份的所有提现记录
+        LambdaQueryWrapper<WithdrawalRecord> withdrawalWrapper = new LambdaQueryWrapper<>();
+        withdrawalWrapper.ge(WithdrawalRecord::getApplyTime, startOfMonth);
+        withdrawalWrapper.le(WithdrawalRecord::getApplyTime, endOfMonth);
+        List<WithdrawalRecord> monthWithdrawals = withdrawalRecordService.list(withdrawalWrapper);
+        
+        // 8. 计算已提现金额（状态为1-已通过）
+        BigDecimal totalWithdrawal = monthWithdrawals.stream()
+                .filter(w -> w.getStatus() != null && w.getStatus() == 1)
+                .map(WithdrawalRecord::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // 9. 计算待提现金额（状态为0-处理中）
+        BigDecimal pendingWithdrawal = monthWithdrawals.stream()
+                .filter(w -> w.getStatus() != null && w.getStatus() == 0)
+                .map(WithdrawalRecord::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // 构建汇总数据
         Map<String, Object> summary = new HashMap<>();
-        summary.put("totalRevenue", 285600.0);
-        summary.put("totalCommission", 14280.0);
-        summary.put("totalWithdrawal", 12500.0);
-        summary.put("pendingWithdrawal", 1780.0);
-        summary.put("totalShops", 156);
-        summary.put("activeShops", 142);
-        summary.put("totalOrders", 12560);
-        summary.put("averageOrderAmount", 22.74);
-        summary.put("month", month != null ? month : "2024-02");
+        summary.put("totalRevenue", totalRevenue);
+        summary.put("totalCommission", totalCommission);
+        summary.put("totalWithdrawal", totalWithdrawal);
+        summary.put("pendingWithdrawal", pendingWithdrawal);
+        summary.put("totalShops", totalShops);
+        summary.put("activeShops", activeShops);
+        summary.put("totalOrders", totalOrders);
+        summary.put("averageOrderAmount", averageOrderAmount);
+        summary.put("month", month);
         
         result.put("summary", summary);
         
-        List<Map<String, Object>> financeList = new java.util.ArrayList<>();
+        // 10. 分页查询店铺列表
+        Page<Store> storePage = new Page<>(page, pageSize);
+        LambdaQueryWrapper<Store> storeWrapper = new LambdaQueryWrapper<>();
+        storeWrapper.orderByDesc(Store::getCreateTime);
+        storeService.page(storePage, storeWrapper);
         
-        for (int i = 1; i <= pageSize; i++) {
+        // 11. 构建店铺财务数据列表
+        List<Map<String, Object>> financeList = new java.util.ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        
+        for (Store store : storePage.getRecords()) {
             Map<String, Object> financeData = new HashMap<>();
             
-            financeData.put("shopId", 1000L + i);
-            financeData.put("shopName", "美味餐厅" + i);
-            financeData.put("shopType", "中餐");
+            financeData.put("shopId", store.getId());
+            financeData.put("shopName", store.getName());
+            financeData.put("shopType", store.getCategoryId() != null ? "餐饮" : "其他");
             
-            financeData.put("revenue", 1800.0 + i * 50.0);
-            financeData.put("commission", 90.0 + i * 2.5);
-            financeData.put("withdrawal", 80.0 + i * 2.0);
-            financeData.put("pendingWithdrawal", 10.0 + i * 0.5);
+            // 筛选该店铺在指定月份的订单
+            List<Orders> storeOrders = monthOrders.stream()
+                    .filter(order -> store.getId().equals(order.getStoreId()))
+                    .toList();
             
-            financeData.put("orderCount", 80 + i * 2);
-            financeData.put("averageOrderAmount", 22.5 + i * 0.1);
+            // 店铺营收
+            BigDecimal revenue = storeOrders.stream()
+                    .map(Orders::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            financeData.put("revenue", revenue);
             
-            financeData.put("commissionRate", 0.05);
-            financeData.put("withdrawalRate", String.format("%.2f", (80.0 + i * 2.0) / (1800.0 + i * 50.0) * 100));
+            // 店铺佣金
+            BigDecimal commission = revenue.multiply(commissionRate).setScale(2, BigDecimal.ROUND_HALF_UP);
+            financeData.put("commission", commission);
             
-            financeData.put("lastWithdrawalTime", "2024-02-08 10:30:00");
-            financeData.put("withdrawalStatus", "已提现");
+            // 订单数量
+            int orderCount = storeOrders.size();
+            financeData.put("orderCount", orderCount);
+            
+            // 平均订单金额
+            BigDecimal avgOrderAmount = orderCount > 0 
+                    ? revenue.divide(BigDecimal.valueOf(orderCount), 2, BigDecimal.ROUND_HALF_UP)
+                    : BigDecimal.ZERO;
+            financeData.put("averageOrderAmount", avgOrderAmount);
+            
+            // 佣金率
+            financeData.put("commissionRate", commissionRate);
+            
+            // 筛选该店铺在指定月份的提现记录
+            List<WithdrawalRecord> storeWithdrawals = monthWithdrawals.stream()
+                    .filter(w -> store.getId().equals(w.getStoreId()))
+                    .toList();
+            
+            // 已提现金额
+            BigDecimal withdrawal = storeWithdrawals.stream()
+                    .filter(w -> w.getStatus() != null && w.getStatus() == 1)
+                    .map(WithdrawalRecord::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            financeData.put("withdrawal", withdrawal);
+            
+            // 待提现金额
+            BigDecimal storePendingWithdrawal = storeWithdrawals.stream()
+                    .filter(w -> w.getStatus() != null && w.getStatus() == 0)
+                    .map(WithdrawalRecord::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            financeData.put("pendingWithdrawal", storePendingWithdrawal);
+            
+            // 提现率
+            String withdrawalRate = revenue.compareTo(BigDecimal.ZERO) > 0 
+                    ? String.format("%.2f", withdrawal.divide(revenue, 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)))
+                    : "0.00";
+            financeData.put("withdrawalRate", withdrawalRate);
+            
+            // 最近提现时间
+            String lastWithdrawalTime = storeWithdrawals.stream()
+                    .filter(w -> w.getStatus() != null && w.getStatus() == 1)
+                    .map(WithdrawalRecord::getProcessTime)
+                    .filter(Objects::nonNull)
+                    .max(LocalDateTime::compareTo)
+                    .map(t -> t.format(formatter))
+                    .orElse(null);
+            financeData.put("lastWithdrawalTime", lastWithdrawalTime);
+            
+            // 提现状态
+            String withdrawalStatus = storePendingWithdrawal.compareTo(BigDecimal.ZERO) > 0 
+                    ? "待提现" 
+                    : (withdrawal.compareTo(BigDecimal.ZERO) > 0 ? "已提现" : "无记录");
+            financeData.put("withdrawalStatus", withdrawalStatus);
             
             financeList.add(financeData);
         }
         
         result.put("list", financeList);
-        result.put("total", 156);
+        result.put("total", storePage.getTotal());
         result.put("page", page);
         result.put("pageSize", pageSize);
-        result.put("totalPages", 16);
+        result.put("totalPages", storePage.getPages());
 
         return R.success(result);
     }
@@ -1915,44 +2045,6 @@ public class PlatformController {
         return R.success(consumption);
     }
 
-    @GetMapping("/user/list")
-    public R<Map<String, Object>> getUserList(@RequestParam(value = "page", defaultValue = "1") Integer page,
-                                            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
-                                            @RequestParam(value = "keyword", required = false) String keyword,
-                                            @RequestParam(value = "status", required = false) Integer status) {
-        log.info("获取用户列表：page={}, pageSize={}, keyword={}, status={}", page, pageSize, keyword, status);
-
-        Map<String, Object> result = new HashMap<>();
-        
-        List<Map<String, Object>> userList = new java.util.ArrayList<>();
-        
-        for (int i = 1; i <= pageSize; i++) {
-            int userId = (page - 1) * pageSize + i;
-            Map<String, Object> user = new HashMap<>();
-            user.put("id", userId);
-            user.put("username", "user" + userId);
-            user.put("nickname", "用户" + userId);
-            user.put("phone", "138****" + String.format("%04d", userId % 10000));
-            user.put("avatar", "https://example.com/avatar/" + userId + ".jpg");
-            user.put("gender", i % 2 == 0 ? "男" : "女");
-            user.put("age", 18 + (userId % 40));
-            user.put("status", status != null ? status : (i % 5 == 0 ? 0 : 1));
-            user.put("registerTime", "2024-01-" + String.format("%02d", (userId % 28 + 1)) + " 10:30:00");
-            user.put("lastLoginTime", "2024-02-08 " + String.format("%02d", (userId % 24)) + ":30:00");
-            user.put("totalOrders", 10 + (userId % 50));
-            user.put("totalConsumption", 100.0 + (userId % 500));
-            userList.add(user);
-        }
-        
-        result.put("list", userList);
-        result.put("total", 12580);
-        result.put("page", page);
-        result.put("pageSize", pageSize);
-        result.put("totalPages", 1258);
-
-        return R.success(result);
-    }
-
     @GetMapping("/user/trend")
     public R<Map<String, Object>> getUserTrend(@RequestParam(value = "days", defaultValue = "30") Integer days) {
         log.info("获取用户趋势数据：days={}", days);
@@ -1980,5 +2072,115 @@ public class PlatformController {
         trend.put("summary", summary);
 
         return R.success(trend);
+    }
+
+    /**
+     * 获取用户列表（分页）
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @param keyword 搜索关键词（用户名或手机号）
+     * @return 用户列表数据
+     */
+    @GetMapping("/user/list")
+    public R<Map<String, Object>> getUserList(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String keyword) {
+        log.info("获取用户列表：page={}, pageSize={}, keyword={}", page, pageSize, keyword);
+
+        Page<User> userPage = new Page<>(page, pageSize);
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+
+        // 搜索条件
+        if (keyword != null && !keyword.isEmpty()) {
+            queryWrapper.and(wrapper -> wrapper
+                    .like(User::getUsername, keyword)
+                    .or()
+                    .like(User::getPhone, keyword)
+                    .or()
+                    .like(User::getName, keyword));
+        }
+
+        queryWrapper.orderByDesc(User::getCreateTime);
+        userService.page(userPage, queryWrapper);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", userPage.getRecords());
+        result.put("total", userPage.getTotal());
+        result.put("current", userPage.getCurrent());
+        result.put("size", userPage.getSize());
+        result.put("pages", userPage.getPages());
+
+        return R.success(result);
+    }
+
+    /**
+     * 删除用户
+     * @param params 包含用户ID列表的参数
+     * @return 删除结果
+     */
+    @PostMapping("/user/delete")
+    public R<String> deleteUser(@RequestBody Map<String, List<Long>> params) {
+        List<Long> ids = params.get("ids");
+        log.info("删除用户：ids={}", ids);
+
+        if (ids == null || ids.isEmpty()) {
+            return R.error("用户ID不能为空");
+        }
+
+        boolean success = userService.removeByIds(ids);
+        if (success) {
+            return R.success("删除用户成功");
+        } else {
+            return R.error("删除用户失败");
+        }
+    }
+
+    /**
+     * 更新用户状态
+     * @param params 包含用户ID和状态的参数
+     * @return 更新结果
+     */
+    @PostMapping("/user/status")
+    public R<String> updateUserStatus(@RequestBody Map<String, Object> params) {
+        Long id = Long.valueOf(params.get("id").toString());
+        Integer status = Integer.valueOf(params.get("status").toString());
+        log.info("更新用户状态：id={}, status={}", id, status);
+
+        if (id == null) {
+            return R.error("用户ID不能为空");
+        }
+
+        if (status == null || (status != 0 && status != 1)) {
+            return R.error("状态值不合法");
+        }
+
+        User user = new User();
+        user.setId(id);
+        user.setStatus(status);
+
+        boolean success = userService.updateById(user);
+        if (success) {
+            return R.success("更新用户状态成功");
+        } else {
+            return R.error("更新用户状态失败");
+        }
+    }
+
+    /**
+     * 获取用户详情
+     * @param id 用户ID
+     * @return 用户详情
+     */
+    @GetMapping("/user/detail/{id}")
+    public R<User> getUserDetail(@PathVariable Long id) {
+        log.info("获取用户详情：id={}", id);
+
+        User user = userService.getById(id);
+        if (user != null) {
+            return R.success(user);
+        } else {
+            return R.error("用户不存在");
+        }
     }
 }
