@@ -221,19 +221,19 @@ public class ShopController {
         log.info("审核店铺：params={}", params);
 
         Long id = params.get("id") != null ? Long.valueOf(params.get("id").toString()) : null;
-        Integer approveResult = params.get("approveResult") != null ? Integer.valueOf(params.get("approveResult").toString()) : null;
-        String auditRemark = params.get("auditRemark") != null ? params.get("auditRemark").toString() : null;
+        Integer status = params.get("status") != null ? Integer.valueOf(params.get("status").toString()) : null;
+        String rejectReason = params.get("rejectReason") != null ? params.get("rejectReason").toString() : null;
 
         if (id == null) {
             return R.error("店铺ID不能为空");
         }
 
-        if (approveResult == null) {
-            return R.error("审核结果不能为空");
+        if (status == null) {
+            return R.error("审核状态不能为空");
         }
 
-        if (approveResult != 0 && approveResult != 1) {
-            return R.error("审核结果不合法");
+        if (status != 1 && status != 2) {
+            return R.error("审核状态不合法");
         }
 
         Store store = storeService.getById(id);
@@ -241,12 +241,13 @@ public class ShopController {
             return R.error("店铺不存在");
         }
 
-        store.setStatus(approveResult);
+        store.setStatus(status);
         store.setUpdateTime(LocalDateTime.now());
 
         boolean success = storeService.updateById(store);
         if (success) {
-            return R.success("审核店铺成功");
+            String msg = status == 1 ? "审核通过成功" : "审核拒绝成功";
+            return R.success(msg);
         } else {
             return R.error("审核店铺失败");
         }
