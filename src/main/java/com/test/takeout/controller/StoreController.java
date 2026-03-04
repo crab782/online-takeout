@@ -303,4 +303,61 @@ public class StoreController {
         return R.success(store);
     }
 
+    /**
+     * 申请开设店铺
+     * @param store 店铺信息
+     * @return 申请结果
+     */
+    @PostMapping("/apply")
+    public R<String> apply(@RequestBody Store store) {
+        log.info("申请开设店铺：store={}", store);
+
+        // 参数校验
+        if (store.getName() == null || store.getName().isEmpty()) {
+            return R.error("店铺名称不能为空");
+        }
+        if (store.getAddress() == null || store.getAddress().isEmpty()) {
+            return R.error("店铺地址不能为空");
+        }
+        if (store.getPhone() == null || store.getPhone().isEmpty()) {
+            return R.error("联系电话不能为空");
+        }
+
+        // 校验手机号格式
+        String phone = store.getPhone();
+        if (!phone.matches("^1[3-9]\\d{9}$")) {
+            return R.error("请输入正确的手机号码");
+        }
+
+        // 设置默认值
+        store.setStatus(0); // 状态设为0-待审核
+        store.setSales(0); // 销量初始化为0
+        store.setRating(java.math.BigDecimal.valueOf(5.0)); // 评分初始化为5.0
+
+        // 设置默认营业时间（如果未提供）
+        if (store.getOpenTime() == null || store.getOpenTime().isEmpty()) {
+            store.setOpenTime("09:00");
+        }
+        if (store.getCloseTime() == null || store.getCloseTime().isEmpty()) {
+            store.setCloseTime("22:00");
+        }
+
+        // 设置默认配送费和起送金额（如果未提供）
+        if (store.getDeliveryFee() == null) {
+            store.setDeliveryFee(java.math.BigDecimal.ZERO);
+        }
+        if (store.getMinOrderAmount() == null) {
+            store.setMinOrderAmount(java.math.BigDecimal.ZERO);
+        }
+
+        // 保存店铺信息
+        boolean success = storeService.save(store);
+        if (success) {
+            log.info("店铺申请提交成功，店铺ID：{}，名称：{}", store.getId(), store.getName());
+            return R.success("店铺申请提交成功，请等待审核");
+        } else {
+            return R.error("店铺申请提交失败，请稍后重试");
+        }
+    }
+
 }
