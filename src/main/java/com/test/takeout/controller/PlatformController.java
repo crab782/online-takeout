@@ -2,6 +2,7 @@ package com.test.takeout.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.time.format.DateTimeFormatter;
 import com.test.takeout.common.JwtUtil;
 import com.test.takeout.common.R;
 import com.test.takeout.entity.Employee;
@@ -1672,50 +1673,99 @@ public class PlatformController {
 
         Map<String, Object> result = new HashMap<>();
         
+        // 构建查询条件
+        LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 如果有订单号搜索条件
+        if (orderNo != null && !orderNo.isEmpty()) {
+            queryWrapper.like(Orders::getNumber, orderNo);
+        }
+        
+        // 按创建时间倒序排序
+        queryWrapper.orderByDesc(Orders::getCreateTime);
+        
+        // 分页查询
+        Page<Orders> orderPage = new Page<>(page, pageSize);
+        ordersService.page(orderPage, queryWrapper);
+        
+        // 构建响应数据
         List<Map<String, Object>> orderList = new java.util.ArrayList<>();
         
-        String[] statuses = {"待支付", "已支付", "处理中", "配送中", "已完成", "已取消"};
-        String[] statusesEn = {"pending", "paid", "processing", "delivering", "completed", "cancelled"};
-        
-        for (int i = 1; i <= pageSize; i++) {
+        for (Orders order : orderPage.getRecords()) {
             Map<String, Object> orderData = new HashMap<>();
             
-            orderData.put("orderId", 10000L + i);
-            orderData.put("orderNo", "ORD" + String.format("%08d", 10000 + i));
-            orderData.put("shopId", 1000L + i);
-            orderData.put("shopName", "美味餐厅" + i);
-            orderData.put("shopType", "中餐");
+            orderData.put("orderId", order.getId());
+            orderData.put("orderNo", order.getNumber());
+            orderData.put("shopId", order.getStoreId());
+            orderData.put("shopName", order.getStoreName());
+            orderData.put("shopType", "中餐"); // 暂时固定为中餐
             
-            orderData.put("userId", 20000L + i);
-            orderData.put("userName", "用户" + i);
-            orderData.put("userPhone", "138****" + String.format("%04d", 1000 + i));
+            orderData.put("userId", order.getUserId());
+            orderData.put("userName", order.getUserName());
+            orderData.put("userPhone", order.getPhone());
             
-            int statusIndex = (i - 1) % 6;
-            orderData.put("status", statuses[statusIndex]);
-            orderData.put("statusEn", statusesEn[statusIndex]);
+            // 转换订单状态
+            String status = getOrderStatusText(order.getStatus());
+            String statusEn = getOrderStatusEn(order.getStatus());
+            orderData.put("status", status);
+            orderData.put("statusEn", statusEn);
             
-            orderData.put("totalAmount", 50.0 + i * 5.0);
-            orderData.put("discountAmount", 5.0 + i * 0.5);
-            orderData.put("deliveryFee", 3.0);
-            orderData.put("actualAmount", 48.0 + i * 4.5);
+            orderData.put("totalAmount", order.getAmount());
+            orderData.put("discountAmount", 0.0); // 暂时固定为0
+            orderData.put("deliveryFee", 3.0); // 暂时固定为3元
+            orderData.put("actualAmount", order.getAmount()); // 暂时使用订单金额
             
-            orderData.put("orderTime", "2024-02-08 " + String.format("%02d", 9 + i) + ":30:00");
-            orderData.put("deliveryTime", statusIndex >= 3 ? "2024-02-08 " + String.format("%02d", 10 + i) + ":30:00" : null);
-            orderData.put("completeTime", statusIndex == 4 ? "2024-02-08 " + String.format("%02d", 11 + i) + ":30:00" : null);
+            orderData.put("orderTime", order.getCreateTime() != null ? order.getCreateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null);
+            orderData.put("deliveryTime", null); // 暂时为null
+            orderData.put("completeTime", null); // 暂时为null
             
-            orderData.put("address", "北京市朝阳区xxx街道xxx号");
-            orderData.put("remark", i % 3 == 0 ? "少放辣" : "");
+            orderData.put("address", order.getAddress());
+            orderData.put("remark", order.getRemark());
             
             orderList.add(orderData);
         }
         
         result.put("list", orderList);
-        result.put("total", 156);
+        result.put("total", orderPage.getTotal());
         result.put("page", page);
         result.put("pageSize", pageSize);
-        result.put("totalPages", 16);
+        result.put("totalPages", (int) Math.ceil((double) orderPage.getTotal() / pageSize));
 
         return R.success(result);
+    }
+    
+    /**
+     * 获取订单状态文本
+     * @param status 订单状态码
+     * @return 订单状态文本
+     */
+    private String getOrderStatusText(Integer status) {
+        switch (status) {
+            case 0: return "待支付";
+            case 1: return "已支付";
+            case 2: return "处理中";
+            case 3: return "配送中";
+            case 4: return "已完成";
+            case 5: return "已取消";
+            default: return "未知";
+        }
+    }
+    
+    /**
+     * 获取订单状态英文
+     * @param status 订单状态码
+     * @return 订单状态英文
+     */
+    private String getOrderStatusEn(Integer status) {
+        switch (status) {
+            case 0: return "pending";
+            case 1: return "paid";
+            case 2: return "processing";
+            case 3: return "delivering";
+            case 4: return "completed";
+            case 5: return "cancelled";
+            default: return "unknown";
+        }
     }
 
     /**
