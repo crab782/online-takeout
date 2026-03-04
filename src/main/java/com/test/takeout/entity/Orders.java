@@ -100,6 +100,11 @@ public class Orders implements Serializable {
     private LocalDateTime updateTime;
 
     /**
+     * 店铺评分（1-5星）
+     */
+    private Integer rating;
+
+    /**
      * 订单详情（非数据库字段）
      */
     @TableField(exist = false)

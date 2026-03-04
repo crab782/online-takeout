@@ -86,4 +86,14 @@ public class Store implements Serializable {
      */
     private LocalDateTime updateTime;
 
+    /**
+     * 月销量
+     */
+    private Integer sales;
+
+    /**
+     * 店铺评分
+     */
+    private java.math.BigDecimal rating;
+
 }

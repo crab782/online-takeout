@@ -56,7 +56,7 @@ public class ConcurrencyTest {
             executor.submit(() -> {
                 try {
                     for (int j = 0; j < requestsPerThread; j++) {
-                        storeController.list(1, 12, "", null, null);
+                        storeController.list(1, 12, "", null, null, null);
                     }
                 } finally {
                     latch.countDown();

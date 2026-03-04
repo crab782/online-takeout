@@ -46,7 +46,7 @@ public class PerformanceTest {
         // 测试响应时间
         long startTime = System.nanoTime();
         for (int i = 0; i < 100; i++) {
-            storeController.list(1, 12, "", null, null);
+            storeController.list(1, 12, "", null, null, null);
         }
         long endTime = System.nanoTime();
 

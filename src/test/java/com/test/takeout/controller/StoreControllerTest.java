@@ -46,7 +46,7 @@ public class StoreControllerTest {
         when(storeService.page(any(Page.class), any())).thenReturn(pageInfo);
 
         // 调用controller方法
-        R<Page<Store>> response = storeController.list(1, 12, "", null, null);
+        R<Page<Store>> response = storeController.list(1, 12, "", null, null, null);
 
         // 验证结果
         assertEquals(1, response.getCode());

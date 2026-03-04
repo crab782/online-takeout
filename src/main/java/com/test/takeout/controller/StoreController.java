@@ -106,6 +106,7 @@ public class StoreController {
      * @param name 店铺名称（可选）
      * @param categoryId 分类ID（可选）
      * @param status 店铺状态（可选，1-营业中，0-已关闭）
+     * @param sortBy 排序方式（可选，recommend-推荐，sales-销量，rating-评分）
      * @return 店铺列表
      */
     @GetMapping("/list")
@@ -113,8 +114,9 @@ public class StoreController {
                                   @RequestParam(value = "pageSize", defaultValue = "12") Integer pageSize,
                                   @RequestParam(value = "name", required = false) String name,
                                   @RequestParam(value = "categoryId", required = false) Long categoryId,
-                                  @RequestParam(value = "status", required = false) Integer status) {
-        log.info("获取店铺列表：page={}, pageSize={}, name={}, categoryId={}, status={}", page, pageSize, name, categoryId, status);
+                                  @RequestParam(value = "status", required = false) Integer status,
+                                  @RequestParam(value = "sortBy", required = false) String sortBy) {
+        log.info("获取店铺列表：page={}, pageSize={}, name={}, categoryId={}, status={}, sortBy={}", page, pageSize, name, categoryId, status, sortBy);
 
         Page<Store> pageInfo = new Page<>(page, pageSize);
 
@@ -132,7 +134,17 @@ public class StoreController {
             queryWrapper.eq(Store::getStatus, status);
         }
 
-        queryWrapper.orderByDesc(Store::getCreateTime);
+        // 根据排序方式设置排序规则
+        if ("sales".equals(sortBy)) {
+            // 按销量降序
+            queryWrapper.orderByDesc(Store::getSales);
+        } else if ("rating".equals(sortBy)) {
+            // 按评分降序
+            queryWrapper.orderByDesc(Store::getRating);
+        } else {
+            // 默认按创建时间降序（推荐）
+            queryWrapper.orderByDesc(Store::getCreateTime);
+        }
 
         storeService.page(pageInfo, queryWrapper);
 
