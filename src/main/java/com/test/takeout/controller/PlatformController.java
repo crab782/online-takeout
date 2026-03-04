@@ -1741,12 +1741,13 @@ public class PlatformController {
      */
     private String getOrderStatusText(Integer status) {
         switch (status) {
-            case 0: return "待支付";
+            case 0: return "未支付";
             case 1: return "已支付";
-            case 2: return "处理中";
-            case 3: return "配送中";
-            case 4: return "已完成";
-            case 5: return "已取消";
+            case 2: return "已接单";
+            case 3: return "已出餐";
+            case 4: return "已配送";
+            case 5: return "已完成";
+            case 6: return "已取消";
             default: return "未知";
         }
     }
@@ -1760,10 +1761,11 @@ public class PlatformController {
         switch (status) {
             case 0: return "pending";
             case 1: return "paid";
-            case 2: return "processing";
-            case 3: return "delivering";
-            case 4: return "completed";
-            case 5: return "cancelled";
+            case 2: return "accepted";
+            case 3: return "prepared";
+            case 4: return "delivering";
+            case 5: return "completed";
+            case 6: return "cancelled";
             default: return "unknown";
         }
     }
