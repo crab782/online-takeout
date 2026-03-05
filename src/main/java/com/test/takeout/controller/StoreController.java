@@ -3,14 +3,19 @@ package com.test.takeout.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.test.takeout.common.R;
+import com.test.takeout.entity.Employee;
 import com.test.takeout.entity.Store;
 import com.test.takeout.entity.StoreFavorite;
+import com.test.takeout.service.EmployeeService;
 import com.test.takeout.service.StoreFavoriteService;
 import com.test.takeout.service.StoreService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 店铺控制器，处理店铺相关的请求
@@ -22,10 +27,12 @@ public class StoreController {
 
     private final StoreService storeService;
     private final StoreFavoriteService storeFavoriteService;
+    private final EmployeeService employeeService;
 
-    public StoreController(StoreService storeService, StoreFavoriteService storeFavoriteService) {
+    public StoreController(StoreService storeService, StoreFavoriteService storeFavoriteService, EmployeeService employeeService) {
         this.storeService = storeService;
         this.storeFavoriteService = storeFavoriteService;
+        this.employeeService = employeeService;
     }
 
     /**
@@ -305,59 +312,129 @@ public class StoreController {
 
     /**
      * 申请开设店铺
-     * @param store 店铺信息
+     * @param params 参数（包含店铺信息和管理员信息）
      * @return 申请结果
      */
     @PostMapping("/apply")
-    public R<String> apply(@RequestBody Store store) {
-        log.info("申请开设店铺：store={}", store);
+    @Transactional(rollbackFor = Exception.class)
+    public R<String> apply(@RequestBody Map<String, Object> params) {
+        log.info("申请开设店铺：params={}", params);
+
+        // 获取店铺信息
+        String name = params.get("name") != null ? params.get("name").toString() : null;
+        String address = params.get("address") != null ? params.get("address").toString() : null;
+        String phone = params.get("phone") != null ? params.get("phone").toString() : null;
+        String description = params.get("description") != null ? params.get("description").toString() : null;
+        String image = params.get("image") != null ? params.get("image").toString() : null;
+        String openTime = params.get("openTime") != null ? params.get("openTime").toString() : null;
+        String closeTime = params.get("closeTime") != null ? params.get("closeTime").toString() : null;
+        
+        // 获取管理员信息
+        String username = params.get("username") != null ? params.get("username").toString() : null;
+        String password = params.get("password") != null ? params.get("password").toString() : null;
 
         // 参数校验
-        if (store.getName() == null || store.getName().isEmpty()) {
+        if (name == null || name.isEmpty()) {
             return R.error("店铺名称不能为空");
         }
-        if (store.getAddress() == null || store.getAddress().isEmpty()) {
+        if (address == null || address.isEmpty()) {
             return R.error("店铺地址不能为空");
         }
-        if (store.getPhone() == null || store.getPhone().isEmpty()) {
+        if (phone == null || phone.isEmpty()) {
             return R.error("联系电话不能为空");
         }
-
-        // 校验手机号格式
-        String phone = store.getPhone();
-        if (!phone.matches("^1[3-9]\\d{9}$")) {
-            return R.error("请输入正确的手机号码");
+        if (username == null || username.isEmpty()) {
+            return R.error("管理员账号不能为空");
+        }
+        if (password == null || password.isEmpty()) {
+            return R.error("管理员密码不能为空");
         }
 
-        // 设置默认值
-        store.setStatus(0); // 状态设为0-待审核
-        store.setSales(0); // 销量初始化为0
-        store.setRating(java.math.BigDecimal.valueOf(5.0)); // 评分初始化为5.0
+        // 校验手机号格式（支持手机号和 400 电话）
+        if (!phone.matches("^(1[3-9]\\d{9}|400(-\\d{3,4}){2})$")) {
+            return R.error("请输入正确的手机号或 400 电话格式");
+        }
+
+        // 检查管理员账号是否已存在
+        LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Employee::getUsername, username);
+        Employee existingEmployee = employeeService.getOne(queryWrapper);
+        if (existingEmployee != null) {
+            return R.error("管理员账号已存在，请更换账号");
+        }
+
+        // 创建店铺对象
+        Store store = new Store();
+        store.setName(name);
+        store.setAddress(address);
+        store.setPhone(phone);
+        store.setDescription(description);
+        
+        // 如果没有上传图片，使用默认图片
+        if (image == null || image.isEmpty()) {
+            store.setImage("https://example.com/images/kfc.jpg");
+        } else {
+            store.setImage(image);
+        }
+        
+        store.setStatus(0); // 状态设为 0-待审核
+        store.setSales(0); // 销量初始化为 0
+        store.setRating(java.math.BigDecimal.valueOf(5.0)); // 评分初始化为 5.0
 
         // 设置默认营业时间（如果未提供）
-        if (store.getOpenTime() == null || store.getOpenTime().isEmpty()) {
+        if (openTime == null || openTime.isEmpty()) {
             store.setOpenTime("09:00");
+        } else {
+            store.setOpenTime(openTime);
         }
-        if (store.getCloseTime() == null || store.getCloseTime().isEmpty()) {
+        
+        if (closeTime == null || closeTime.isEmpty()) {
             store.setCloseTime("22:00");
+        } else {
+            store.setCloseTime(closeTime);
         }
 
-        // 设置默认配送费和起送金额（如果未提供）
-        if (store.getDeliveryFee() == null) {
-            store.setDeliveryFee(java.math.BigDecimal.ZERO);
-        }
-        if (store.getMinOrderAmount() == null) {
-            store.setMinOrderAmount(java.math.BigDecimal.ZERO);
-        }
+        // 设置默认配送费和起送金额
+        store.setDeliveryFee(java.math.BigDecimal.ZERO);
+        store.setMinOrderAmount(java.math.BigDecimal.ZERO);
+
+        store.setCreateTime(LocalDateTime.now());
+        store.setUpdateTime(LocalDateTime.now());
 
         // 保存店铺信息
-        boolean success = storeService.save(store);
-        if (success) {
-            log.info("店铺申请提交成功，店铺ID：{}，名称：{}", store.getId(), store.getName());
-            return R.success("店铺申请提交成功，请等待审核");
-        } else {
+        boolean storeSaved = storeService.save(store);
+        if (!storeSaved) {
             return R.error("店铺申请提交失败，请稍后重试");
         }
-    }
 
+        // 创建管理员账户
+        Employee employee = new Employee();
+        employee.setUsername(username);
+        
+        // 使用 BCrypt 加密密码
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder = 
+            new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        String encodedPassword = passwordEncoder.encode(password);
+        employee.setPassword(encodedPassword);
+        
+        employee.setName(name + "管理员");
+        employee.setPhone(phone);
+        employee.setRole(2); // 角色设为 2（店铺管理员）
+        employee.setStoreId(store.getId());
+        employee.setStatus(0); // 状态设为 0-待审核（与店铺状态一致）
+        employee.setCreatedAt(LocalDateTime.now());
+        employee.setUpdatedAt(LocalDateTime.now());
+
+        // 保存管理员账户
+        boolean employeeSaved = employeeService.save(employee);
+        if (!employeeSaved) {
+            // 回滚店铺保存
+            storeService.removeById(store.getId());
+            return R.error("店铺申请提交失败，请稍后重试");
+        }
+
+        log.info("店铺申请提交成功，店铺 ID：{}，名称：{}，管理员账号：{}", 
+                store.getId(), store.getName(), username);
+        return R.success("店铺申请提交成功，请等待审核");
+    }
 }
