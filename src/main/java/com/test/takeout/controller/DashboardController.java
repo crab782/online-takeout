@@ -161,14 +161,14 @@ public class DashboardController {
     }
 
     /**
-     * 获取近30日业务趋势数据
+     * 获取近7日业务趋势数据
      * @param request 请求对象
      * @param shopId 店铺ID
-     * @return 近30日业务趋势数据
+     * @return 近7日业务趋势数据
      */
     @GetMapping("/business-trend")
     public R<Map<String, Object>> getBusinessTrend(HttpServletRequest request, @RequestParam(value = "shopId", required = false) Long shopId) {
-        log.info("获取近30日业务趋势数据，shopId: {}", shopId);
+        log.info("获取近7日业务趋势数据，shopId: {}", shopId);
 
         Long storeId = null;
         if (shopId != null) {
@@ -189,13 +189,13 @@ public class DashboardController {
         // 获取当前时间
         LocalDateTime now = LocalDateTime.now();
         
-        // 准备近30天的数据容器
+        // 准备近7天的数据容器
         List<String> dates = new ArrayList<>();
         List<Integer> orderCounts = new ArrayList<>();
         List<Double> amounts = new ArrayList<>();
 
-        // 遍历近30天，从昨天开始往前推29天
-        for (int i = 29; i >= 0; i--) {
+        // 遍历近7天，从昨天开始往前推6天
+        for (int i = 6; i >= 0; i--) {
             LocalDateTime date = now.minusDays(i);
             LocalDateTime startOfDay = date.withHour(0).withMinute(0).withSecond(0).withNano(0);
             LocalDateTime endOfDay = date.withHour(23).withMinute(59).withSecond(59).withNano(999999999);

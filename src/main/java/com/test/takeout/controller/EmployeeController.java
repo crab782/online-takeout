@@ -73,19 +73,13 @@ public class EmployeeController {
             log.info("输入密码：{}", password);
             log.info("数据库存储密码：{}", emp.getPassword());
             
-            // 特殊处理：如果输入密码是"123"，直接返回成功
-            if ("123".equals(password)) {
-                log.info("特殊处理：输入密码是123，直接返回成功");
-                // 跳过密码验证，直接进行后续逻辑
-            } else {
-                // 使用BCryptPasswordEncoder验证密码
-                boolean passwordMatch = encoder.matches(password, emp.getPassword());
-                log.info("密码验证结果：{}", passwordMatch);
-                
-                if (!passwordMatch) {
-                    log.info("密码错误：输入密码={}", password);
-                    return R.error("密码错误");
-                }
+            // 使用BCryptPasswordEncoder验证密码
+            boolean passwordMatch = encoder.matches(password, emp.getPassword());
+            log.info("密码验证结果：{}", passwordMatch);
+            
+            if (!passwordMatch) {
+                log.info("密码错误：输入密码={}", password);
+                return R.error("密码错误");
             }
 
             // 员工状态返回员工禁用结果

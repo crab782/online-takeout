@@ -145,9 +145,6 @@ public class StoreController {
         if ("sales".equals(sortBy)) {
             // 按销量降序
             queryWrapper.orderByDesc(Store::getSales);
-        } else if ("rating".equals(sortBy)) {
-            // 按评分降序
-            queryWrapper.orderByDesc(Store::getRating);
         } else {
             // 默认按创建时间降序（推荐）
             queryWrapper.orderByDesc(Store::getCreateTime);
@@ -379,7 +376,6 @@ public class StoreController {
         
         store.setStatus(0); // 状态设为 0-待审核
         store.setSales(0); // 销量初始化为 0
-        store.setRating(java.math.BigDecimal.valueOf(5.0)); // 评分初始化为 5.0
 
         // 设置默认营业时间（如果未提供）
         if (openTime == null || openTime.isEmpty()) {

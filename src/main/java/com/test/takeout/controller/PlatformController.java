@@ -404,84 +404,76 @@ public class PlatformController {
     }
 
     /**
-     * 获取平台近30天趋势数据
+     * 获取平台近3个月趋势数据（按自然月统计）
      * @return 趋势数据
      */
     @GetMapping("/dashboard/trend")
     public R<Map<String, Object>> getPlatformTrendData() {
-        log.info("获取平台近30天趋势数据");
+        log.info("获取平台近3个月趋势数据");
 
         Map<String, Object> trendData = new HashMap<>();
         
-        // 日期列表
-        List<String> dates = new java.util.ArrayList<>();
+        // 月份列表
+        List<String> months = new java.util.ArrayList<>();
         // 订单数量列表
         List<Integer> orderCounts = new java.util.ArrayList<>();
         // 订单金额列表
         List<Double> orderAmounts = new java.util.ArrayList<>();
-        // 用户数量列表
-        List<Integer> userCounts = new java.util.ArrayList<>();
-        // 店铺数量列表
+        // 活跃店铺数量列表
         List<Integer> shopCounts = new java.util.ArrayList<>();
         
         LocalDateTime now = LocalDateTime.now();
         
-        // 遍历近30天，从昨天开始往前推29天
-        for (int i = 29; i >= 0; i--) {
-            LocalDateTime date = now.minusDays(i);
-            LocalDateTime startOfDay = date.withHour(0).withMinute(0).withSecond(0).withNano(0);
-            LocalDateTime endOfDay = date.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        // 遍历近3个月（包括当前月）
+        for (int i = 2; i >= 0; i--) {
+            LocalDateTime monthDate = now.minusMonths(i);
+            int year = monthDate.getYear();
+            int month = monthDate.getMonthValue();
+            
+            // 获取该月的开始和结束时间
+            LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0, 0);
+            LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusSeconds(1);
 
-            // 格式化日期为YYYY-MM-DD
-            String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            dates.add(dateStr);
+            // 格式化月份为YYYY-MM
+            String monthStr = String.format("%d年%d月", year, month);
+            months.add(monthStr);
 
-            // 查询当天的所有订单
+            // 查询该月的所有订单
             LambdaQueryWrapper<Orders> orderWrapper = new LambdaQueryWrapper<>();
-            orderWrapper.ge(Orders::getCreateTime, startOfDay);
-            orderWrapper.le(Orders::getCreateTime, endOfDay);
-            List<Orders> dayOrders = ordersService.list(orderWrapper);
+            orderWrapper.ge(Orders::getCreateTime, startOfMonth);
+            orderWrapper.le(Orders::getCreateTime, endOfMonth);
+            List<Orders> monthOrders = ordersService.list(orderWrapper);
 
             // 统计订单数
-            int orderCount = dayOrders.size();
+            int orderCount = monthOrders.size();
             orderCounts.add(orderCount);
 
             // 统计金额
-            BigDecimal dayAmount = dayOrders.stream()
+            BigDecimal monthAmount = monthOrders.stream()
                     .map(Orders::getAmount)
                     .filter(Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            orderAmounts.add(dayAmount.doubleValue());
+            orderAmounts.add(monthAmount.doubleValue());
             
-            // 用户数量（当天有订单的用户去重）
-            long dayUserCount = dayOrders.stream()
-                    .map(Orders::getUserId)
-                    .filter(Objects::nonNull)
-                    .distinct()
-                    .count();
-            userCounts.add((int) dayUserCount);
-            
-            // 店铺数量（当天有订单的店铺去重）
-            long dayShopCount = dayOrders.stream()
+            // 活跃店铺数量（该月有订单的店铺去重）
+            long monthShopCount = monthOrders.stream()
                     .map(Orders::getStoreId)
                     .filter(Objects::nonNull)
                     .distinct()
                     .count();
-            shopCounts.add((int) dayShopCount);
+            shopCounts.add((int) monthShopCount);
         }
         
-        trendData.put("dates", dates);
+        trendData.put("months", months);
         // 前端期望的字段名：revenues（营收）、orders（订单数）、activeShops（活跃店铺数）
         trendData.put("revenues", orderAmounts);
         trendData.put("orders", orderCounts);
         trendData.put("activeShops", shopCounts);
-        trendData.put("userCounts", userCounts);
         
         // 汇总数据
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalOrders", orderCounts.stream().mapToInt(Integer::intValue).sum());
         summary.put("totalAmount", orderAmounts.stream().mapToDouble(Double::doubleValue).sum());
-        summary.put("totalUsers", userCounts.stream().mapToInt(Integer::intValue).sum());
         summary.put("totalShops", shopCounts.stream().mapToInt(Integer::intValue).sum());
         trendData.put("summary", summary);
 

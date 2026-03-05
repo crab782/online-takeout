@@ -825,11 +825,6 @@ public class OrderController {
                 return R.error("订单ID不能为空");
             }
 
-            String paymentMethod = (String) paymentInfo.get("paymentMethod");
-            if (paymentMethod == null) {
-                paymentMethod = "alipay"; // 默认支付宝
-            }
-
             // 查询订单
             Orders order = ordersService.getById(orderId);
             if (order == null) {
@@ -840,14 +835,14 @@ public class OrderController {
             Orders updateOrder = new Orders();
             updateOrder.setId(orderId);
             updateOrder.setPayStatus(1); // 支付成功
-            updateOrder.setPayMethod(paymentMethod.equals("alipay") ? 1 : 2); // 1:支付宝，2:微信
+            updateOrder.setPayMethod(2); // 固定为微信支付
             updateOrder.setStatus(2); // 自动接单，状态变为商家接单
             updateOrder.setUpdateTime(LocalDateTime.now());
 
             boolean success = ordersService.updateById(updateOrder);
             if (success) {
-                log.info("订单支付成功，订单ID：{}，订单号：{}，支付方式：{}", 
-                        orderId, order.getNumber(), paymentMethod);
+                log.info("订单支付成功，订单ID：{}，订单号：{}，支付方式：微信支付", 
+                        orderId, order.getNumber());
                 return R.success("支付成功");
             } else {
                 log.error("订单支付状态更新失败，订单ID：{}", orderId);
