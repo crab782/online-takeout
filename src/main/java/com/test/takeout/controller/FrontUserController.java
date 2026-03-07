@@ -310,63 +310,9 @@ public class FrontUserController {
         }
     }
 
-    /**
-     * 获取手机验证码
-     * @param params 验证码参数
-     * @return 验证码发送结果
-     */
-    @GetMapping("/code")
-    public R<String> getPhoneCode(@RequestParam Map<String, String> params) {
-        log.info("获取手机验证码：params={}", params);
 
-        String phone = params.get("phone");
 
-        if (phone == null || phone.isEmpty()) {
-            return R.error("手机号不能为空");
-        }
 
-        return R.success("验证码发送成功");
-    }
-
-    /**
-     * 临时接口：更新用户密码（用于修复数据库密码问题）
-     * @param phone 手机号
-     * @return 更新结果
-     */
-    @PostMapping("/updatePassword")
-    public R<String> updatePassword(@RequestParam String phone) {
-        log.info("更新用户密码：phone={}", phone);
-        
-        // 根据手机号查询用户
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getPhone, phone);
-        User user = userService.getOne(queryWrapper);
-        
-        if (user == null) {
-            return R.error("用户不存在");
-        }
-        
-        // 使用BCryptPasswordEncoder生成新的加密密码
-        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
-        String newPassword = "123456";
-        String encodedPassword = passwordEncoder.encode(newPassword);
-        
-        log.info("原始密码：{}", newPassword);
-        log.info("加密后的密码：{}", encodedPassword);
-        
-        // 更新用户密码
-        user.setPassword(encodedPassword);
-        user.setUpdateTime(LocalDateTime.now());
-        boolean updated = userService.updateById(user);
-        
-        if (updated) {
-            log.info("密码更新成功");
-            return R.success("密码更新成功");
-        } else {
-            log.info("密码更新失败");
-            return R.error("密码更新失败");
-        }
-    }
 
     /**
      * 退出登录

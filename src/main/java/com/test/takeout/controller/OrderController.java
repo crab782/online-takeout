@@ -317,53 +317,7 @@ public class OrderController {
         }
     }
 
-    /**
-     * 更新订单状态
-     * @param orders 订单信息（必须包含订单ID和新状态）
-     * @return 操作结果
-     */
-    @PutMapping("/status")
-    public R<String> updateStatus(@RequestBody Orders orders) {
-        log.info("更新订单状态：orders={}", orders);
 
-        if (orders.getId() == null) {
-            return R.error("订单ID不能为空");
-        }
-        if (orders.getStatus() == null) {
-            return R.error("订单状态不能为空");
-        }
-
-        Orders oldOrder = ordersService.getById(orders.getId());
-        if (oldOrder == null) {
-            log.error("订单不存在，订单ID：{}", orders.getId());
-            return R.error("订单不存在");
-        }
-
-        String statusText = getStatusText(orders.getStatus());
-        log.info("订单状态变更：订单ID={}，订单号={}，原状态={}，新状态={}（{}）", 
-                orders.getId(), oldOrder.getNumber(), oldOrder.getStatus(), orders.getStatus(), statusText);
-
-        Orders updateOrder = new Orders();
-        updateOrder.setId(orders.getId());
-        updateOrder.setStatus(orders.getStatus());
-        updateOrder.setUpdateTime(LocalDateTime.now());
-
-        boolean success = ordersService.updateById(updateOrder);
-        if (success) {
-            // 当订单状态更新为已完成时，增加店铺余额
-            if (orders.getStatus() == 5) {
-                storeBalanceService.addBalance(oldOrder.getStoreId(), oldOrder.getAmount());
-                log.info("订单完成，增加店铺余额：店铺ID={}，金额={}", oldOrder.getStoreId(), oldOrder.getAmount());
-            }
-            log.info("订单状态更新成功：订单ID={}，订单号={}，新状态={}（{}）", 
-                    orders.getId(), oldOrder.getNumber(), orders.getStatus(), statusText);
-            return R.success("更新订单状态成功");
-        } else {
-            log.error("订单状态更新失败：订单ID={}，订单号={}，目标状态={}（{}）", 
-                    orders.getId(), oldOrder.getNumber(), orders.getStatus(), statusText);
-            return R.error("更新订单状态失败");
-        }
-    }
 
     /**
      * 修改订单状态（取消/派送/完成）
@@ -547,51 +501,7 @@ public class OrderController {
         }
     }
 
-    /**
-     * 获取当天订单统计
-     * @return 当天订单统计数据
-     */
-    @GetMapping("/today-stats")
-    public R<Map<String, Object>> todayStats() {
-        log.info("获取当天订单统计");
 
-        // 获取当天开始时间（00:00:00）
-        LocalDateTime todayStart = LocalDateTime.now().with(LocalTime.MIN);
-        // 获取当天结束时间（23:59:59）
-        LocalDateTime todayEnd = LocalDateTime.now().with(LocalTime.MAX);
-
-        // 查询当天所有订单
-        LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.ge(Orders::getCreateTime, todayStart);
-        queryWrapper.le(Orders::getCreateTime, todayEnd);
-        List<Orders> todayOrders = ordersService.list(queryWrapper);
-
-        // 统计数据
-        Map<String, Object> stats = new HashMap<>();
-
-        // 总订单数
-        int totalOrders = todayOrders.size();
-        stats.put("totalOrders", totalOrders);
-
-        // 待处理订单数（状态为0）
-        long pendingOrders = todayOrders.stream().filter(order -> order.getStatus() == 0).count();
-        stats.put("pendingOrders", pendingOrders);
-
-        // 已完成订单数（状态为1）
-        long completedOrders = todayOrders.stream().filter(order -> order.getStatus() == 1).count();
-        stats.put("completedOrders", completedOrders);
-
-        // 计算总销售额
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        for (Orders order : todayOrders) {
-            if (order.getAmount() != null) {
-                totalAmount = totalAmount.add(order.getAmount());
-            }
-        }
-        stats.put("totalAmount", totalAmount);
-
-        return R.success(stats);
-    }
 
     /**
      * 再来一单

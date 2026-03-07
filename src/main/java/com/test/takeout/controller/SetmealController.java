@@ -568,22 +568,6 @@ public class SetmealController {
         return R.success(setmealList);
     }
 
-    /**
-     * 获取套餐包含的所有菜品详情
-     * @param id 套餐ID
-     * @return 套餐菜品列表
-     */
-    @GetMapping("/dish/{id}")
-    public R<List<SetmealDish>> getDishList(@PathVariable Long id) {
-        log.info("获取套餐包含的所有菜品详情：id={}", id);
 
-        LambdaQueryWrapper<SetmealDish> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SetmealDish::getSetmealId, id);
-        queryWrapper.orderByAsc(SetmealDish::getSort);
-
-        List<SetmealDish> setmealDishList = setmealDishService.list(queryWrapper);
-
-        return R.success(setmealDishList);
-    }
 
 }
